@@ -1,0 +1,495 @@
+Popunjavanje PATH-a :
+
+
+export PATH=~/qemu-3.1.0/bin/arm/arm-softmmu:$PATH
+export PATH=~/qemu-3.1.0/bin/arm:$PATH
+export PATH=/home/aleksandarv/gcc-arm-8.2-2019.01-x86_64-arm-linux-gnueabihf/bin:$PATH
+
+Prvi čin:
+
+
+Prekopirati pds03.patch u qemu direktorijum sa sors kodom.
+
+$ patch -p1 < pds03.patch
+
+Patch-ovan sors kod u QEMU-u.
+
+patching file hw/arm/vexpress.c
+patching file hw/misc/Makefile.objs
+patching file hw/misc/pds-i2csens.c
+patching file hw/misc/pds-mmsens.c
+
+Potrebno ući u ../bin/arm/ 
+
+
+
+i ponovo make-ovati qemu 
+
+ali prvo mora 
+
+$ make clean
+
+$ ../../configure –target-list=arm-softmmu –enable-sdl –with-sdlabi=2.0 –enable-tools –enable-fdt –enable-libnfs –audio-drv-list=alsa
+
+Napomena: Nisam uspeo da ponovo pustim configure na već build-ovano
+
+i onda
+
+$ make 
+
+
+Napomena:
+
+$ mkdir -p (-p znači da ne prijavljuje error ako već postoji direktorijum)
+
+===========================================================================
+
+CTRL (0x0)
+	EN
+	IEN
+	RES
+	SPEED
+
+
+STATUS (0x4) IFG	interrupt flag 0 1(generisan prekid)
+
+DATA (0x8) Sample	sample data
+
+Za pozicije bita u odgovarajućim registrima pogledati fajl hw/misc/pds_mm_sens.cu okviru Qemu koda (nakon primene patch fajla) pošto se razlikuju za svakog studenta
+
+===========================================================================
+
+CTRL	0 -> DATA_x daju 0xFF 1 -> senzor uključen
+RESERVED
+DATA_L 4	razlomljeni deo
+DATA_H 8	ceo deo merenja, dat u komplementu osnove
+
+
+Za pozicije bita u odgovarajućim registrima pogledati fajl hw/misc/pds_i2c_sens.cu okviru Qemu koda (nakon primene patch fajla)
+
+
+Ovo su neke promene, koje izgleda nisu bitne već je bitno samo da gledam patch fajl.
+===========================================================================
+
+potrebno je menjati nešto u u-boot/configs
+
+fajl vexpress_ca9x4_pds03_defconfig
+
+CONFIG_TARGET_VEXPRESS_CA9X4_PDS03=y
+CONFIG_SYS_TEXT_BASE=0x80800000
+
+config TARGET_VEXPRESS_PDS03
+bool "Support vexpress_pds03"
+select CPU_V7A
+select PL011_SERIAL
+source "board/armltd/vexpress_pds03/Kconfig"
+
+
+Prekopirati include/configs/vexpress_common.h
+
+promene u ~/u-boot-2019.01/include/configs
+
+#define V2M_BASE		0x80000000
+#define V2M_MMCI		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(5))
+#define V2M_UART0		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(14))
+#define V2M_TIMER01		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(21))
+
+
+kopirati board/armltd/vexpress u board/armltd/vexpress_ca9_pds03 
+
+board/armltd/vexpress_ca9_pds03/Kconfig
+
+if TARGET_VEXPRESS_CA9X4_PDS03
+
+config SYS_BOARD
+	default "vexpress"
+
+config SYS_VENDOR
+	default "armltd"
+
+config SYS_CONFIG_NAME
+	default "vexpress_ca9x4_pds03"
+
+endif
+
+Potrebno je promeiti u Makefile-u:
+obj-$(CONFIG_TARGET_VEXPRESS_CA9X4_PDS03)	+= vexpress_tc2.o
+
+
+arch/arm/Kconfig
+
+dodati:
+
+config TARGET_VEXPRESS_CA9X4_PDS03
+	bool "Support vexpress_ca9_pds03"
+	select CPU_V7A
+	select PL011_SERIAL
+
+source "board/armltd/vexpress_ca9_pds03/Kconfig"
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- vexpress_ca9x4_pds03_defconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+
+Za proveru stare ploče ...
+
+$ make CROSS_COMPILE=arm-linux-gnueabihf- vexpress_ca9x4_defconfig
+$ make CROSS_COMPILE=arm-linux-gnueabihf-
+
+Da bi već kompajlirani u-boot mogao ponovo da se kompajlira za drugu arhitekturu.
+
+
+====================================================================================
+
+Linux kernel:
+
+arch/arm/boot/dts/vexpress-v2m-ca9-pds03.dtsi
+arch/arm/boot/dts/vexpress-v2p-ca9-pds03.dts. 
+
+vexpress-v2m.dtsi i vexpress-v2p-ca9.dts.
+
+ -- vexpress-v2m-ca9.dtsi
+
+pds03_mmsensor@18000 {
+	compatible = "pds03,mmsensor";
+	reg = <0x18000 0x1000>;
+	interrupts = <27>;
+};
+pds03_i2c: i2c@8000 {
+	compatible = "arm,versatile-i2c";
+	reg = <0x8000 0x1000>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+};
+
+dodati u vexpress-v2p-pds03.dts
+#include "vexpress-v2m-pds03.dtsi"
+
+U Makefile-u doodati
+
+dtb-$(CONFIG_ARCH_VEXPRESS) += \
+	vexpress-v2p-ca5s.dtb \
+	vexpress-v2p-ca9.dtb \
+	vexpress-v2p-pds03.dtb \ (samo ovo se dodaje)
+	vexpress-v2p-ca15-tc1.dtb \
+	vexpress-v2p-ca15_a7.dtb
+
+Potrebno je omogućiti I2C podršku. To se radi tako što se omogući (linux) menuconfig -> Device Drivers –> I2C Support –> I2C Hardware Bus Support -> Versatile Arm Realview I2C bus support.
+
+Potrebno je za drajver implementirati funkcije čitanja, pisanja, pokretanja, zaustavljanja, preko sysfs fajlova. Kod za drajver i podešavanja potrebno je ubaciti u drivers/char/ direktorijum. 
+
+Napisati kod za modul drajvera (demo) ...
+
+za kompajliranje
+
+drivers/char/Makefile:
+obj-$(CONFIG_PDS03_MMSENSOR) += mmsensor_03.o
+
+u drivers/char/Kconfig:
+
+config PDS03_MMSENSOR
+	tristate "PDS03 Memory Mapped Sensor driver"
+	depends on ARCH_VEXPRESS
+	default y
+	help
+		This is driver for Memory Mapped Sensor
+
+Pravljenje patch-a za u boot i kernel ...
+
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- multi_v7_defconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+
+ 
+Čin treći:
+
+U postojeći fajlsistem potrebno je dodati direktorijum /www i u njega prekopirati folder cgi-bin dobijen u postavci zadatka 
+Ovo verovatno u rootfs ...
+
+Za pravljenje ovog fajl sistema koristi se BusyBox
+
+Moraju da bude exportovano sranje u PATH-u.
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- defconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- install
+
+Za pravljenje root fajlsistem-a koristi se BusyBox,koji instalira osnovni rootfs dovoljan za ovaj projekat. Kada se instalira potrebno je dodati pakete sqlite, i2c-tools za komunikaciju.
+pre instaliranja potrebno je u menuconfig podesiti instalacioni direktorijum. ~/rootfs
+ 
+
+Eksportovanje promenjlivih
+
+export SYSROOT=$(arm-linux-gnueabihf-gcc -print-sysroot)
+export STAGING=/home/aleksandarv/rootfs
+
+Instalacija sqlite
+
+wget http://www.sqlite.org/2015/sqlite-autoconf-3081101.tar.gz
+tar xf sqlite-autoconf-3081101.tar.gz
+cd sqlite-autoconf-3081101
+
+CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnueabihf --prefix=/usr
+
+make DESTDIR=$SYSROOT install
+make DESTDIR=$STAGING install
+
+
+cp -a $SYSROOT/usr/lib/libsqlite3.so.0 $STAGING/lib/
+cp -a $SYSROOT/usr/lib/libsqlite3.so.0.8.6 $STAGING/lib/
+cp -a $SYSROOT/lib/libdl.so.2 $STAGING/lib/
+cp -a $SYSROOT/lib/libdl-2.28.so $STAGING/lib/
+cp -a $SYSROOT/lib/libpthread.so.0 $STAGING/lib/
+cp -a $SYSROOT/lib/libpthread-2.28.so $STAGING/lib/
+
+Zašto se kopiraju ovi direktorijumi?
+
+
+Sledeće što je potrebno jeste da se dohvati i instalira paket i2c-tools.
+
+
+wget https://git.kernel.org/pub/scm/utils/i2c-tools/i2c-tools.git/snapshot/i2c-tools-4.1.tar.gz
+tar xf i2c-tools-4.1.tar.gz
+cd i2c-tools-4.1
+
+make CC=arm-linux-gnueabihf-gcc
+make PREFIX=/usr DESTDIR=~/Downloads/rootfs install
+
+
+A sada aplikacija c program:
+
+I pokretanje aplikacije:
+
+qemu-system-arm -M vexpress-pds03 -m 1G -kernel u-boot-2019.01/u-boot -nographic -drive file=sd.img,format=raw,if=sd -net nic -net tap,ifname=tap0,script=no
+
+setenv bootargs "root=/dev/mem rdinit=/sbin/init console=ttyAMA0"
+fatload mmc 0:1 82000000 zImage
+fatload mmc 0:1 88000000 vexpress-v2p-ca9-pds03.dtb
+fatload mmc 0:1 88080000 uRamdisk
+
+bootz 82000000 88080000 88000000
+
+
+-device loader
+
+
+,file=u-boot-commands.img, addr=0x100000,force-raw -net nic -net tap,ifname=tap0,script=no
+
+
+Pravljenje u-boot commands:
+
+
+https://bootlin.com/blog/mkenvimage-uboot-binary-env-generator/
+
+mkimage -T u-boot-commands -C none -n 'setenv-name' -d u-boot.env u-boot.env.img
+
+
+qemu-system-arm -M vexpress-pds03 -m 1G -kernel u-boot-2019.01/u-boot -nographic -drive file=sd.img,format=raw,if=sd -device loader,file=u-boot-commands.img,addr=0x100000,force-raw -net nic -net tap,ifname=tap0,script=no
+
+
+
+
+
+
+Razlika između patch-eva
+
+< From 8703dc535fa67f37ef05baa802349f04be641ada Mon Sep 17 00:00:00 2001
+< From: Strahinja Jankovic <jankovicstr88@gmail.com>
+< Date: Sun, 12 Apr 2020 14:45:15 +0200
+< Subject: [PATCH] PDS QEMU project 2019/2020 Template
+---
+> From 072cc4b73fdebc80c73666d5e74fb78a32687b6b Mon Sep 17 00:00:00 2001
+> From: Strahinja Jankovic <jankovics@etf.bg.ac.rs>
+> Date: Mon, 1 Apr 2019 11:10:25 +0200
+> Subject: [PATCH] PDS1819 Template
+6c6
+< Signed-off-by: Strahinja Jankovic <jankovicstr88@gmail.com>
+---
+> Signed-off-by: Strahinja Jankovic <jankovics@etf.bg.ac.rs>
+8c8
+<  hw/arm/vexpress.c     | 139 ++++++++++
+---
+>  hw/arm/vexpress.c     | 139 +++++++++++
+10,12c10,12
+<  hw/misc/pds-i2csens.c | 319 +++++++++++++++++++++++
+<  hw/misc/pds-mmsens.c  | 582 ++++++++++++++++++++++++++++++++++++++++++
+<  4 files changed, 1043 insertions(+)
+---
+>  hw/misc/pds-i2csens.c | 319 +++++++++++++++++++++++++
+>  hw/misc/pds-mmsens.c  | 541 ++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 1002 insertions(+)
+25,28c25,28
+< +#define PDS_VE_MMCI         (0x10005000)
+< +#define PDS_VE_UART0        (0x1000e000)
+< +#define PDS_VE_TIMER01      (0x10015000)
+< +#define PDS_VE_MM_SENSOR    (0x10018000)
+---
+> +#define PDS_VE_MMCI         (0x1000d000)
+> +#define PDS_VE_UART0        (0x1001e000)
+> +#define PDS_VE_TIMER01      (0x10014000)
+> +#define PDS_VE_MM_SENSOR    (0x10019000)
+30,31c30,31
+< +#define PDS_VE_I2C          (0x10008000)
+< +#define PDS_VE_I2C_ADDR     (0x42)
+---
+> +#define PDS_VE_I2C          (0x1001c000)
+> +#define PDS_VE_I2C_ADDR     (0x69)
+74c74
+< +#define TYPE_VEXPRESS_PDS_MACHINE   MACHINE_TYPE_NAME("vexpress-pds03")
+---
+> +#define TYPE_VEXPRESS_PDS_MACHINE   MACHINE_TYPE_NAME("vexpress-pds22")
+183c183
+< +    mc->desc = "ARM Versatile Express for PDS Project 03";
+---
+> +    mc->desc = "ARM Versatile Express for PDS Project 22";
+228c228
+< index 0000000000..25325e8894
+---
+> index 0000000000..592e42fd15
+235c235
+< + * (c) 2018-2020 School of Electrical Engineering Univ of Belgrade
+---
+> + * (c) 2018-2019 School of Electrical Engineering Univ of Belgrade
+451c451
+< +                s->current_sample = (s->current_sample + 1) % DATA_ARRAY_LEN;
+---
+> +                s->current_sample = (s->current_sample + 1) % DATA_ARRAY_LEN;                
+460c460
+< +
+---
+> +    
+469c469
+< +
+---
+> +    
+483c483
+< +
+---
+> +    
+497c497
+< +
+---
+> +    
+504c504
+< +
+---
+> +    
+553c553
+< index 0000000000..05ab8f6797
+---
+> index 0000000000..11f64785e7
+556c556
+< @@ -0,0 +1,582 @@
+---
+> @@ -0,0 +1,541 @@
+560c560
+< + * (c) 2018-2020 School of Electrical Engineering Univ of Belgrade
+---
+> + * (c) 2018-2019 School of Electrical Engineering Univ of Belgrade
+606,609c606,608
+< +    FIELD(CTRL,     EN,         16,  1)      /* component enable */
+< +    FIELD(CTRL,     IEN,        17,  1)      /* interrupt enable */
+< +    FIELD(CTRL,     RES,        18,  1)      /* resolution setting */
+< +    FIELD(CTRL,     FREQ,       19,  1)      /* sampling frequency setting */
+---
+> +    FIELD(CTRL,     EN,         20,  1)      /* component enable */
+> +    FIELD(CTRL,     IEN,        21,  1)      /* interrupt enable */
+> +    FIELD(CTRL,     RES,        22,  2)      /* 2 bits to set resolution */
+612c611
+< +    FIELD(STATUS,   IFG,        17,  1)      /* interrupt flag */
+---
+> +    FIELD(STATUS,   IFG,        21,  1)      /* interrupt flag */
+883,886c882,883
+< +#define RES_8BIT        (1)
+< +
+< +#define FREQ_NORMAL     (0)
+< +#define FREQ_FAST       (1)
+---
+> +#define RES_10BIT       (1)
+> +#define RES_8BIT        (2)
+899,900d895
+< +    uint8_t sampling_frequency;
+< +    uint8_t gen_count;
+928,930d922
+< +    uint8_t step = 0;
+< +
+< +    s->gen_count++;
+932c924,926
+< +    switch (s->sampling_frequency)
+---
+> +    s->curr_sample = (s->curr_sample + 1) % DATA_ARRAY_LEN;
+> +    
+> +    switch (s->resolution)
+934,939c928,929
+< +        case FREQ_NORMAL:
+< +            /* normal sampling frequency */
+< +            if (s->gen_count == 2) {
+< +                step = 2;
+< +                s->gen_count = 0;
+< +            }
+---
+> +        case RES_8BIT:
+> +            s->regs[R_DATA] = data_array[s->curr_sample] & 0xff00;
+941,946c931,932
+< +        case FREQ_FAST:
+< +            /* fast sampling frequency */
+< +            if (s->gen_count == 1) {
+< +                step = 1;
+< +                s->gen_count = 0;
+< +            }
+---
+> +        case RES_10BIT:
+> +            s->regs[R_DATA] = data_array[s->curr_sample] & 0xffc0;
+948,950c934,935
+< +        default:
+< +            step = 0;
+< +            DB_PRINT("Error: Wrong sampling frequency!\n");
+---
+> +        case RES_12BIT:
+> +            s->regs[R_DATA] = data_array[s->curr_sample] & 0xfff0;
+954,955c939
+< +    if (step != 0) {
+< +        s->curr_sample = (s->curr_sample + step) % DATA_ARRAY_LEN;
+---
+> +    s->regs[R_STATUS] |= R_STATUS_IFG_MASK;
+957,970c941
+< +        switch (s->resolution)
+< +        {
+< +            case RES_8BIT:
+< +                s->regs[R_DATA] = data_array[s->curr_sample] & 0xff00;
+< +                break;
+< +            case RES_12BIT:
+< +                s->regs[R_DATA] = data_array[s->curr_sample] & 0xfff0;
+< +                break;
+< +        }
+< +
+< +        s->regs[R_STATUS] |= R_STATUS_IFG_MASK;
+< +
+< +        DB_PRINT("Updating data %d\n", s->regs[R_DATA]);
+< +    }
+---
+> +    DB_PRINT("Updating data %d\n", s->regs[R_DATA]);
+985,986d955
+< +    s->sampling_frequency = FREQ_NORMAL;
+< +    s->gen_count = 0;
+1003d971
+< +    uint8_t new_sfreq;
+1013,1019d980
+< +    new_sfreq = (s->regs[R_CTRL] & R_CTRL_FREQ_MASK) >> R_CTRL_FREQ_SHIFT;
+< +
+< +    if (new_sfreq != s->sampling_frequency) {
+< +        s->sampling_frequency = new_sfreq;
+< +        s->gen_count = 0;
+< +    }
+< +
+1051c1012
+< +        .rsvd = ~(R_CTRL_EN_MASK | R_CTRL_IEN_MASK | R_CTRL_RES_MASK | R_CTRL_FREQ_MASK),
+---
+> +        .rsvd = ~(R_CTRL_EN_MASK | R_CTRL_IEN_MASK | R_CTRL_RES_MASK),
+1083,1084d1043
+< +        VMSTATE_UINT8(sampling_frequency, PdsMMSensor),
+< +        VMSTATE_UINT8(gen_count, PdsMMSensor),
+1141d1099
+< 
+
+

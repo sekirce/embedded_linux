@@ -1,0 +1,567 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Lachaise Assignment
+% LaTeX Template
+% Version 1.0 (26/6/2018)
+%
+% This template originates from:
+% http://www.LaTeXTemplates.com
+%
+% Authors:
+% Marion Lachaise & François Févotte
+% Vel (vel@LaTeXTemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+
+\documentclass{article}
+
+
+\input{structure.tex} % Include the file specifying the document structure and custom commands
+\usepackage{amsmath}
+\usepackage{physics}
+\usepackage[serbian]{babel}
+
+\usepackage{siunitx} % for micro meters
+
+
+% \renewcommand{\question}{Pitanje}
+
+%----------------------------------------------------------------------------------------
+%	ASSIGNMENT INFORMATION
+%----------------------------------------------------------------------------------------
+
+\title{Izveštaj za projekat iz predmeta \\ Projektovanje Digitalnih sistema} %\#1} % Title of the assignment
+
+\author{Aleksandar Vuković 2018/3034}%\\ \texttt{y.amagi@inabauniversity.jp}} % Author name and email address
+
+% University of Inaba ---
+\date{Poslednji put promenjeno: \today} % University, school and/or department name(s) and a date
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle % Print the title
+
+%----------------------------------------------------------------------------------------
+%	INTRODUCTION
+%----------------------------------------------------------------------------------------
+
+% \section*{Uvod} % Unnumbered section
+
+
+
+% \, \newpage
+
+% \, \newpage
+
+% \section{Domaći zadatak 1}
+
+\section{Opis posla}
+
+
+Potrebno je realizovati softversku podršku za pristup mernoj stanici preko mreže. Merna stanica je implementirana na razvojnom sistemu koji je baziran na modifikovanoj Versatile Express V2P CA9 ploči i sadrži dva senzora, memorijski mapirani senzor za merenje napona i I2C senzor za merenje temperature. Da bi se omogućio pristup tim senzorima potrebno je prvo portovati U-Boot i Linuks operativni sistem na dostupni razvojni sistem i kreirati odgovarajući minimalni root fajlsistem. Nakon toga potrebno je razviti odgovarajući drajver za memorijski mapirani senzor. Takođe, potrebno je razviti korisničku aplikaciju koja će:
+
+
+\begin{itemize}
+  \item komunicirati sa razvijenim drajverom memorijski mapiranog senzora
+  \item komunicirati sa I2C senzorom putem \textit{i2c-dev} iz korisničkog prostora
+  \item izmerene podatke smeštati u bazu podataka \\
+\end{itemize}
+
+
+Dostupna je web aplikacija koju treba kopirati na zadatu lokaciju na root fajlsistemu. Web aplikacija prilikom pristupa web client-a čita podatke iz baze i prikazuje ih u vidu grafika. 
+
+
+\section{Početno okruženje i priprema}
+
+Početno okruženje se dobija pokretanjem skripte pod nazivom \textit{pds10-priprema.sh} u željenom direktorijumu na host mašini gde će se nalaziti svi alati i programi od značaja. Ovim dobijamo direktorijume \textbf{Linux kernel}, \textbf{u-boot}, \textbf{qemu}, \textbf{toolchain}, \textbf{struktura fajl sistema}, koje je potrebno instalirati i konfigurisati. \\
+
+Prekopirati \textit{pds03.patch} u qemu direktorijum sa sors kodom, i primeniti \textit{patch}:
+
+\begin{commandline}
+  \begin{verbatim}
+$ patch -p1 < pds03.patch
+  \end{verbatim}
+\end{commandline}
+
+Patch-ovan sors kod u QEMU-u.
+
+\begin{commandline}
+  \begin{verbatim}
+patching file hw/arm/vexpress.c
+patching file hw/misc/Makefile.objs
+patching file hw/misc/pds-i2csens.c
+patching file hw/misc/pds-mmsens.c
+  \end{verbatim}
+\end{commandline}
+
+Potrebno ući u \textbf{../bin/arm/} i ponovo make-ovati qemu, možda prvo očistiti prethodne fajlove.
+
+\begin{commandline}
+  \begin{verbatim}
+$ mkdir -p bin/arm
+$ cd bin/arm
+$ make clean
+$ ../../configure –target-list=arm-softmmu –enable-sdl –with-sdlabi=2.0 
+–enable-tools –enable-fdt –enable-libnfs –audio-drv-list=alsa
+$ make
+  \end{verbatim}
+\end{commandline}
+
+
+Neophodno je promeniti \textit{environment} varijablu, pre korišćenja qemu-a.
+
+\begin{commandline}
+  \begin{verbatim}
+$ export PATH = ~/Downloads/qemu/bin/arm/arm-softmmu:$PATH
+  \end{verbatim}
+\end{commandline}
+
+Qemu je sada podešen za traženu ploču, i sad je potrebno odgovarajuće promene primeniti na module drajvere, kernel-a, u-boot-a ...
+
+\section{Bootloader u-boot podešavanja} 
+
+Pre instaliranja \textit{bootloader}-a neophodno je prolagoditi ga rayvojnom okruženju/ploči. Što znači da ima svoj defconfig fajl unutar direktorijum \textit{~/u-boot-*/configs/)} koji se dobija kopiranjem \textit{vexpress\_ca9x4\_defconfig} u \textit{vexpress\_ca9x4\_pds03\_defconfig} i izmeniti ga dodavanjem sledećih linija:
+
+\begin{file}[./u-boot-*/configs/vexpress\_ca9x4\_pds03\_defconfig]
+\begin{verbatim}
+CONFIG_TARGET_VEXPRESS_CA9X4_PDS03=y
+CONFIG_SYS_TEXT_BASE=0x80800000
+
+...
+\end{verbatim}
+\end{file}
+
+Nova ploča za razvoj bi trebalo da ima zaseban \textit{header} fajl \textit{vexpress\_ca9x4\_pds03.h}. Nov fajl je dobijen kopiranjem koda iz \textit{./include/configs/vexpress\_common.h} i menjanjem narednih makroa.
+
+\begin{file}[./include/configs/vexpress\_ca9x4\_pds03.h]
+\begin{verbatim}
+#define V2M_BASE    0x80000000
+#define V2M_MMCI    (V2M_PA_CS7 + V2M_PERIPH_OFFSET(5))
+#define V2M_UART0   (V2M_PA_CS7 + V2M_PERIPH_OFFSET(14))
+#define V2M_TIMER01   (V2M_PA_CS7 + V2M_PERIPH_OFFSET(21))
+
+...
+\end{verbatim}
+\end{file}
+
+Potrebno je i konfigurisati pre instalacije u-boot-a fajl \textit{../board/armltd/vexpress\_ca9\_pds03} dobijen kopiranjem \textit{../board/armltd/vexpress\_ca9}. \\
+
+Naredne linije kod su dodate u fajlove board/armltd/vexpress\_ca9\_pds03/Kconfig i board/armltd/vexpress\_ca9\_pds03/Makefile:
+
+\begin{file}[./board/armltd/vexpress\_ca9\_pds03/Kconfig]
+\begin{verbatim}
+if TARGET_VEXPRESS_CA9X4_PDS03
+
+config SYS_BOARD
+  default "vexpress"
+
+config SYS_VENDOR
+  default "armltd"
+
+config SYS_CONFIG_NAME
+  default "vexpress_ca9x4_pds03"
+
+endif
+
+...
+\end{verbatim}
+\end{file}
+
+
+\begin{file}[./board/armltd/vexpress\_ca9\_pds03/Makefile]
+\begin{verbatim}
+obj-$(CONFIG_TARGET_VEXPRESS_CA9X4_PDS03) += vexpress_tc2.o
+
+\end{verbatim}
+\end{file}
+
+
+U fajl arch/arm/Kconfig dodati:
+
+\begin{file}[./arch/arm/Kconfig]
+\begin{verbatim}
+
+config TARGET_VEXPRESS_CA9X4_PDS03
+  bool "Support vexpress_ca9_pds03"
+  select CPU_V7A
+  select PL011_SERIAL
+
+source "board/armltd/vexpress_ca9_pds03/Kconfig"
+
+\end{verbatim}
+\end{file}
+
+\begin{commandline}
+  \begin{verbatim}
+$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- \
+vexpress_ca9x4_pds03_defconfig
+$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+  \end{verbatim}
+\end{commandline}
+
+Za proveru stare ploče ...
+
+\begin{commandline}
+  \begin{verbatim}
+$ make CROSS_COMPILE=arm-linux-gnueabihf- vexpress_ca9x4_defconfig
+$ make CROSS_COMPILE=arm-linux-gnueabihf-
+  \end{verbatim}
+\end{commandline}
+
+Da bi već kompajlirani u-boot mogao ponovo da se kompajlira za drugu arhitekturu. \\
+
+Fajlovi \textit{./arch/arm/boot/dts/vexpress-v2m-ca9-pds03.dtsi} i \textit{./arch/arm/boot/dts/vexpress-v2p-ca9-pds03.dts} su dobijeni kopiranjem \textit{vexpress-v2m.dtsi} i \textit{vexpress-v2p-ca9.dts} i dodavanjem sledećeg koda.
+
+\begin{file}[./arch/arm/boot/dts/vexpress-v2m-ca9-pds03.dtsi]
+\begin{verbatim}
+
+pds03_mmsensor@18000 {
+  compatible = "pds03,mmsensor";
+  reg = <0x18000 0x1000>;
+  interrupts = <27>;
+};
+pds03_i2c: i2c@8000 {
+  compatible = "arm,versatile-i2c";
+  reg = <0x8000 0x1000>;
+  #address-cells = <1>;
+  #size-cells = <0>;
+};
+
+...
+\end{verbatim}
+\end{file}
+
+
+Dodati u \textit{./arch/arm/boot/dts/vexpress-v2p-ca9-pds03.dts}:
+
+\begin{file}[Makefile]
+\begin{verbatim}
+#include "vexpress-v2m-pds03.dtsi"
+
+...
+\end{verbatim}
+\end{file}
+
+A u Makefile-u doodati novu ploču za koju treba napraviti dtb fajl (device tree za novu razvojnu ploču):
+
+\begin{file}[Makefile]
+\begin{verbatim}
+dtb-$(CONFIG_ARCH_VEXPRESS) += \
+  vexpress-v2p-ca5s.dtb \
+  vexpress-v2p-ca9.dtb \
+  vexpress-v2p-pds03.dtb \ % (samo ovo se dodaje)
+  vexpress-v2p-ca15-tc1.dtb \
+  vexpress-v2p-ca15_a7.dtb
+
+...
+\end{verbatim}
+\end{file}
+
+
+Potrebno je omogućiti I2C podršku. To se radi tako što se omogući (linux) menuconfig -> Device Drivers –> I2C Support –> I2C Hardware Bus Support -> Versatile Arm Realview I2C bus support. \\
+
+
+\section{Kernel, moduli drajvera, \textit{rootfs}}
+
+
+Za drajver su implementirane funkcije čitanja, pisanja, pokretanja, zaustavljanja, preko sysfs fajlova. Kod za drajver i podešavanja potrebno je ubaciti u drivers/char/ direktorijum. 
+
+Napisati kod za modul drajvera (demo) ...
+
+za kompajliranje
+
+
+
+\begin{file}[./rootf/drivers/char/Makefile]
+\begin{verbatim}
+obj-$(CONFIG_PDS03_MMSENSOR) += mmsensor_03.o
+
+
+...
+\end{verbatim}
+\end{file}
+
+
+\begin{file}[./rootfs/drivers/char/Kconfig]
+\begin{verbatim}
+
+config PDS03_MMSENSOR
+  tristate "PDS03 Memory Mapped Sensor driver"
+  depends on ARCH_VEXPRESS
+  default y
+  help
+    This is driver for Memory Mapped Sensor
+
+...
+\end{verbatim}
+\end{file}
+
+Ponovno instaliranje kernel-a sa izvršenim izmenama. 
+
+\begin{commandline}
+  \begin{verbatim}
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- multi_v7_defconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+  \end{verbatim}
+\end{commandline}
+
+
+
+Pravljenje patch-a za u boot i kernel za upotrebu na odbrani ...
+
+
+
+% \section{\textit{Root} fajlsistem}
+
+
+U postojeći fajlsistem potrebno je dodati direktorijum /www i u njega prekopirati folder cgi-bin dobijen u postavci zadatka 
+Ovo verovatno u rootfs ...
+
+Za pravljenje ovog fajl sistema koristi se BusyBox. \\
+
+Moraju da bude exportovano sranje u PATH-u.
+
+\begin{commandline}
+  \begin{verbatim}
+$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- defconfig
+$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- 
+$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- install
+  \end{verbatim}
+\end{commandline}
+
+Za pravljenje root fajlsistem-a koristi se BusyBox,koji instalira osnovni rootfs dovoljan za ovaj projekat. Kada se instalira potrebno je dodati pakete sqlite, i2c-tools za komunikaciju. \\
+
+pre instaliranja potrebno je u menuconfig podesiti instalacioni direktorijum. ~/rootfs
+ 
+
+Eksportovanje promenjlivih
+
+\begin{commandline}
+  \begin{verbatim}
+$ export SYSROOT=$(arm-linux-gnueabihf-gcc -print-sysroot)
+$ export STAGING=/home/aleksandarv/rootfs
+  \end{verbatim}
+\end{commandline}
+
+Instalacija sqlite, kros kompajlira se za arm-linux arhitekturu.
+
+\begin{commandline}
+  \begin{verbatim}
+wget http://www.sqlite.org/2015/sqlite-autoconf-3081101.tar.gz
+tar xf sqlite-autoconf-3081101.tar.gz
+cd sqlite-autoconf-3081101
+
+CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnueabihf --prefix=/usr
+  \end{verbatim}
+\end{commandline}
+
+\begin{commandline}
+  \begin{verbatim}
+$ make DESTDIR=$SYSROOT install
+$ make DESTDIR=$STAGING install
+  \end{verbatim}
+\end{commandline}
+
+% Zašto se kopiraju ovi direktorijumi?
+Dodavanje neophodnih paketa u emulirani operativni sistem.
+
+\begin{commandline}
+  \begin{verbatim}
+$ cp -a $SYSROOT/usr/lib/libsqlite3.so.0 $STAGING/lib/
+$ cp -a $SYSROOT/usr/lib/libsqlite3.so.0.8.6 $STAGING/lib/
+$ cp -a $SYSROOT/lib/libdl.so.2 $STAGING/lib/
+$ cp -a $SYSROOT/lib/libdl-2.28.so $STAGING/lib/
+$ cp -a $SYSROOT/lib/libpthread.so.0 $STAGING/lib/
+$ cp -a $SYSROOT/lib/libpthread-2.28.so $STAGING/lib/
+  \end{verbatim}
+\end{commandline}
+
+
+
+Sledeće što je potrebno jeste da se dohvati i instalira paket i2c-tools. \\
+
+Za šta služi ovaj paket na emuliranom sistemu?
+
+\begin{commandline}
+  \begin{verbatim}
+$ wget https://git.kernel.org/pub/scm/utils/i2c-tools\
+/i2c-tools.git/snapshot/i2c-tools-4.1.tar.gz
+$ tar xf i2c-tools-4.1.tar.gz
+$ cd i2c-tools-4.1
+
+$ make CC=arm-linux-gnueabihf-gcc
+$ make PREFIX=/usr DESTDIR=~/Downloads/rootfs install
+  \end{verbatim}
+\end{commandline}
+
+
+\section{Pokretanje korisničke aplikacije}
+
+Za pokretanje emulatora potrebno je napraviti image koji bi bio boot-ovan. \\
+
+
+Skripta koja se inicijalizuje na image-u:
+
+
+\begin{commandline}
+  \begin{verbatim}
+
+setenv bootargs "root=/dev/mem rdinit=/sbin/init console=ttyAMA0"
+fatload mmc 0:1 82000000 zImage
+fatload mmc 0:1 88000000 vexpress-v2p-ca9-pds03.dtb
+fatload mmc 0:1 88080000 uRamdisk
+
+bootz 82000000 88080000 88000000
+
+  \end{verbatim}
+\end{commandline}
+
+
+Pokretanje qemu emulatora :
+
+\begin{commandline}
+  \begin{verbatim}
+$ qemu-system-arm -M vexpress-pds03 -m 1G -kernel u-boot-2019.01/u-boot \
+-nographic -drive file=sd.img,format=raw,if=sd \
+-device loader,file=u-boot-commands.img,addr=0x100000,force-raw -net nic \
+-net tap,ifname=tap0,script=no
+  \end{verbatim}
+\end{commandline}
+
+
+Kada prođe ova komanda testiranje korsiničke aplikacije. \\
+
+Ako je aplikacija uspešno pokrenuta na host računaru se može pristupiti podacima iz pretraživača  preko lokalne adrese
+\textit{http://192.168.10.101/cgi-bin/samples}.
+
+% Svaki student će dobiti različit razvojni sistem, gde su razlike ograničene na:
+
+% \begin{itemize}
+%  \item baznu adresu RAM memorije
+%  \item bazne adrese periferija: MMC, UART0, TIMER01, memorijski mapiranog senzora i I2C kontrolera
+%  \item pozicije bita u odgovarajućim registrima i prekidne linije na koju je povezan memorijski mapiran senzor
+%  \item adresu I2C senzora
+% \end{itemize}
+
+
+
+% \begin{equation}
+%     E=
+    
+% \end{equation}
+
+
+% \begin{equation}
+%   F=
+%   \begin{equation}
+
+%   \end{equation}
+
+% \end{equation}
+
+
+
+% \begin{question}
+% 	How to 
+% \end{question}
+
+
+
+% Output impedance:
+
+%------------------------------------------------
+
+% \section{Theoretical viewpoint}
+
+
+% Numbered question, with subquestions in an enumerate environment
+% \begin{question}
+
+
+	% Subquestions numbered with letters
+% 	\begin{enumerate}[(a)]
+% 		\item Do this.
+% 		\item Do that.
+% 		\item Do something else.
+% 	\end{enumerate}
+% \end{question}
+	
+% %------------------------------------------------
+
+% \section{Algorithmic issues}
+
+
+% \begin{center}
+% 	\begin{minipage}{0.5\linewidth} % Adjust the minipage width to accomodate for the length of algorithm lines
+% 		\begin{algorithm}[H]
+% 			\KwIn{$(a, b)$, two floating-point numbers}  % Algorithm inputs
+% 			\KwResult{$(c, d)$, such that $a+b = c + d$} % Algorithm outputs/results
+% 			\medskip
+% 			\If{$\vert b\vert > \vert a\vert$}{
+% 				exchange $a$ and $b$ \;
+% 			}
+% 			$c \leftarrow a + b$ \;
+% 			$z \leftarrow c - a$ \;
+% 			$d \leftarrow b - z$ \;
+% 			{\bf return} $(c,d)$ \;
+% 			\caption{\texttt{FastTwoSum}} % Algorithm name
+% 			\label{alg:fastTwoSum}   % optional label to refer to
+% 		\end{algorithm}
+% 	\end{minipage}
+% \end{center}
+
+
+
+% Numbered question, with an optional title
+% \begin{question}[\itshape (with optional title)]
+
+% \end{question}
+
+
+% %----------------------------------------------------------------------------------------
+% %	PROBLEM 2
+% %----------------------------------------------------------------------------------------
+
+% \section{Implementation}
+
+
+% % File contents
+% \begin{file}[hello.py]
+% \begin{lstlisting}[language=Python]
+% #! /usr/bin/python
+
+% import sys
+% sys.stdout.write("Hello World!\n")
+% \end{lstlisting}
+% \end{file}
+
+
+% % Command-line "screenshot"
+% \begin{commandline}
+% 	\begin{verbatim}
+% 		$ chmod +x hello.py
+% 		$ ./hello.py
+
+% 		Hello World!
+% 	\end{verbatim}
+% \end{commandline}
+
+
+% % Warning text, with a custom title
+% \begin{warn}[Notice:]
+%   In congue risus leo, in gravida enim viverra id. Donec eros mauris, bibendum vel dui at, tempor commodo augue. In vel lobortis lacus. Nam ornare ullamcorper mauris vel molestie. Maecenas vehicula ornare turpis, vitae fringilla orci consectetur vel. Nam pulvinar justo nec neque egestas tristique. Donec ac dolor at libero congue varius sed vitae lectus. Donec et tristique nulla, sit amet scelerisque orci. Maecenas a vestibulum lectus, vitae gravida nulla. Proin eget volutpat orci. Morbi eu aliquet turpis. Vivamus molestie urna quis tempor tristique. Proin hendrerit sem nec tempor sollicitudin.
+% \end{warn}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
