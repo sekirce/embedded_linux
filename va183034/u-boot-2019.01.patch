@@ -1,0 +1,1123 @@
+diff -ruN u-boot-2019.01a/arch/arm/Kconfig u-boot-2019.01b/arch/arm/Kconfig
+--- u-boot-2019.01a/arch/arm/Kconfig	2019-01-14 14:02:36.000000000 -0800
++++ u-boot-2019.01b/arch/arm/Kconfig	2020-09-18 05:15:13.085697000 -0700
+@@ -552,6 +552,11 @@
+ 	  This enables support for Broadcom ARM-based set-top box
+ 	  chipsets, including the 7445 family of chips.
+ 
++config TARGET_VEXPRESS_PDS03
++	bool "Support vexpress_pds03"
++	select CPU_V7A
++	select PL011_SERIAL
++
+ config TARGET_VEXPRESS_CA5X2
+ 	bool "Support vexpress_ca5x2"
+ 	select CPU_V7A
+@@ -1513,6 +1518,7 @@
+ source "board/Marvell/gplugd/Kconfig"
+ source "board/armadeus/apf27/Kconfig"
+ source "board/armltd/vexpress/Kconfig"
++source "board/armltd/vexpress_pds03/Kconfig"
+ source "board/armltd/vexpress64/Kconfig"
+ source "board/broadcom/bcm23550_w1d/Kconfig"
+ source "board/broadcom/bcm28155_ap/Kconfig"
+Binary files u-boot-2019.01a/board/armltd/vexpress_pds03/built-in.o and u-boot-2019.01b/board/armltd/vexpress_pds03/built-in.o differ
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/.built-in.o.cmd u-boot-2019.01b/board/armltd/vexpress_pds03/.built-in.o.cmd
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/.built-in.o.cmd	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/.built-in.o.cmd	2020-09-18 02:36:39.218823000 -0700
+@@ -0,0 +1 @@
++cmd_board/armltd/vexpress/built-in.o :=  arm-linux-gnueabihf-ld.bfd     -r -o board/armltd/vexpress/built-in.o board/armltd/vexpress/vexpress_common.o 
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/Kconfig u-boot-2019.01b/board/armltd/vexpress_pds03/Kconfig
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/Kconfig	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/Kconfig	2020-09-18 04:56:18.861218000 -0700
+@@ -0,0 +1,51 @@
++if TARGET_VEXPRESS_PDS03
++
++config SYS_BOARD
++	default "vexpress"
++
++config SYS_VENDOR
++	default "armltd"
++
++config SYS_CONFIG_NAME
++	default "vexpress_pds03"
++
++endif
++
++if TARGET_VEXPRESS_CA15_TC2
++
++config SYS_BOARD
++	default "vexpress"
++
++config SYS_VENDOR
++	default "armltd"
++
++config SYS_CONFIG_NAME
++	default "vexpress_ca15_tc2"
++
++endif
++
++if TARGET_VEXPRESS_CA5X2
++
++config SYS_BOARD
++	default "vexpress"
++
++config SYS_VENDOR
++	default "armltd"
++
++config SYS_CONFIG_NAME
++	default "vexpress_ca5x2"
++
++endif
++
++if TARGET_VEXPRESS_CA9X4
++
++config SYS_BOARD
++	default "vexpress"
++
++config SYS_VENDOR
++	default "armltd"
++
++config SYS_CONFIG_NAME
++	default "vexpress_ca9x4"
++
++endif
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/MAINTAINERS u-boot-2019.01b/board/armltd/vexpress_pds03/MAINTAINERS
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/MAINTAINERS	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/MAINTAINERS	2019-01-14 14:02:36.000000000 -0800
+@@ -0,0 +1,10 @@
++VERSATILE EXPRESS BOARDS
++M:	Linus Walleij <linus.walleij@linaro.org>
++S:	Maintained
++F:	board/armltd/vexpress/
++F:	include/configs/vexpress_ca15_tc2.h
++F:	configs/vexpress_ca15_tc2_defconfig
++F:	include/configs/vexpress_ca5x2.h
++F:	configs/vexpress_ca5x2_defconfig
++F:	include/configs/vexpress_ca9x4.h
++F:	configs/vexpress_ca9x4_defconfig
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/Makefile u-boot-2019.01b/board/armltd/vexpress_pds03/Makefile
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/Makefile	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/Makefile	2020-09-18 04:57:41.081336000 -0700
+@@ -0,0 +1,7 @@
++# SPDX-License-Identifier: GPL-2.0+
++#
++# (C) Copyright 2000-2004
++# Wolfgang Denk, DENX Software Engineering, wd@denx.de.
++
++obj-y	:= vexpress_common.o
++obj-$(CONFIG_TARGET_VEXPRESS_PDS03)	+= vexpress_tc2.o
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/vexpress_common.c u-boot-2019.01b/board/armltd/vexpress_pds03/vexpress_common.c
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/vexpress_common.c	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/vexpress_common.c	2019-01-14 14:02:36.000000000 -0800
+@@ -0,0 +1,200 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * (C) Copyright 2002
++ * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
++ * Marius Groeger <mgroeger@sysgo.de>
++ *
++ * (C) Copyright 2002
++ * David Mueller, ELSOFT AG, <d.mueller@elsoft.ch>
++ *
++ * (C) Copyright 2003
++ * Texas Instruments, <www.ti.com>
++ * Kshitij Gupta <Kshitij@ti.com>
++ *
++ * (C) Copyright 2004
++ * ARM Ltd.
++ * Philippe Robin, <philippe.robin@arm.com>
++ */
++#include <common.h>
++#include <malloc.h>
++#include <errno.h>
++#include <netdev.h>
++#include <asm/io.h>
++#include <asm/mach-types.h>
++#include <asm/arch/systimer.h>
++#include <asm/arch/sysctrl.h>
++#include <asm/arch/wdt.h>
++#include "../drivers/mmc/arm_pl180_mmci.h"
++
++static struct systimer *systimer_base = (struct systimer *)V2M_TIMER01;
++static struct sysctrl *sysctrl_base = (struct sysctrl *)SCTL_BASE;
++
++static void flash__init(void);
++static void vexpress_timer_init(void);
++DECLARE_GLOBAL_DATA_PTR;
++
++#if defined(CONFIG_SHOW_BOOT_PROGRESS)
++void show_boot_progress(int progress)
++{
++	printf("Boot reached stage %d\n", progress);
++}
++#endif
++
++static inline void delay(ulong loops)
++{
++	__asm__ volatile ("1:\n"
++		"subs %0, %1, #1\n"
++		"bne 1b" : "=r" (loops) : "0" (loops));
++}
++
++int board_init(void)
++{
++	gd->bd->bi_boot_params = LINUX_BOOT_PARAM_ADDR;
++	gd->bd->bi_arch_number = MACH_TYPE_VEXPRESS;
++	gd->flags = 0;
++
++	icache_enable();
++	flash__init();
++	vexpress_timer_init();
++
++	return 0;
++}
++
++int board_eth_init(bd_t *bis)
++{
++	int rc = 0;
++#ifdef CONFIG_SMC911X
++	rc = smc911x_initialize(0, CONFIG_SMC911X_BASE);
++#endif
++	return rc;
++}
++
++int cpu_mmc_init(bd_t *bis)
++{
++	int rc = 0;
++	(void) bis;
++#ifdef CONFIG_ARM_PL180_MMCI
++	struct pl180_mmc_host *host;
++	struct mmc *mmc;
++
++	host = malloc(sizeof(struct pl180_mmc_host));
++	if (!host)
++		return -ENOMEM;
++	memset(host, 0, sizeof(*host));
++
++	strcpy(host->name, "MMC");
++	host->base = (struct sdi_registers *)CONFIG_ARM_PL180_MMCI_BASE;
++	host->pwr_init = INIT_PWR;
++	host->clkdiv_init = SDI_CLKCR_CLKDIV_INIT_V1 | SDI_CLKCR_CLKEN;
++	host->voltages = VOLTAGE_WINDOW_MMC;
++	host->caps = 0;
++	host->clock_in = ARM_MCLK;
++	host->clock_min = ARM_MCLK / (2 * (SDI_CLKCR_CLKDIV_INIT_V1 + 1));
++	host->clock_max = CONFIG_ARM_PL180_MMCI_CLOCK_FREQ;
++	rc = arm_pl180_mmci_init(host, &mmc);
++#endif
++	return rc;
++}
++
++static void flash__init(void)
++{
++	/* Setup the sytem control register to allow writing to flash */
++	writel(readl(&sysctrl_base->scflashctrl) | VEXPRESS_FLASHPROG_FLVPPEN,
++	       &sysctrl_base->scflashctrl);
++}
++
++int dram_init(void)
++{
++	gd->ram_size =
++		get_ram_size((long *)CONFIG_SYS_SDRAM_BASE, PHYS_SDRAM_1_SIZE);
++	return 0;
++}
++
++int dram_init_banksize(void)
++{
++	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
++	gd->bd->bi_dram[0].size =
++			get_ram_size((long *)PHYS_SDRAM_1, PHYS_SDRAM_1_SIZE);
++	gd->bd->bi_dram[1].start = PHYS_SDRAM_2;
++	gd->bd->bi_dram[1].size =
++			get_ram_size((long *)PHYS_SDRAM_2, PHYS_SDRAM_2_SIZE);
++
++	return 0;
++}
++
++/*
++ * Start timer:
++ *    Setup a 32 bit timer, running at 1KHz
++ *    Versatile Express Motherboard provides 1 MHz timer
++ */
++static void vexpress_timer_init(void)
++{
++	/*
++	 * Set clock frequency in system controller:
++	 *   VEXPRESS_REFCLK is 32KHz
++	 *   VEXPRESS_TIMCLK is 1MHz
++	 */
++	writel(SP810_TIMER0_ENSEL | SP810_TIMER1_ENSEL |
++	       SP810_TIMER2_ENSEL | SP810_TIMER3_ENSEL |
++	       readl(&sysctrl_base->scctrl), &sysctrl_base->scctrl);
++
++	/*
++	 * Set Timer0 to be:
++	 *   Enabled, free running, no interrupt, 32-bit, wrapping
++	 */
++	writel(SYSTIMER_RELOAD, &systimer_base->timer0load);
++	writel(SYSTIMER_RELOAD, &systimer_base->timer0value);
++	writel(SYSTIMER_EN | SYSTIMER_32BIT |
++	       readl(&systimer_base->timer0control),
++	       &systimer_base->timer0control);
++}
++
++int v2m_cfg_write(u32 devfn, u32 data)
++{
++	/* Configuration interface broken? */
++	u32 val;
++
++	devfn |= SYS_CFG_START | SYS_CFG_WRITE;
++
++	val = readl(V2M_SYS_CFGSTAT);
++	writel(val & ~SYS_CFG_COMPLETE, V2M_SYS_CFGSTAT);
++
++	writel(data, V2M_SYS_CFGDATA);
++	writel(devfn, V2M_SYS_CFGCTRL);
++
++	do {
++		val = readl(V2M_SYS_CFGSTAT);
++	} while (val == 0);
++
++	return !!(val & SYS_CFG_ERR);
++}
++
++/* Use the ARM Watchdog System to cause reset */
++void reset_cpu(ulong addr)
++{
++	if (v2m_cfg_write(SYS_CFG_REBOOT | SYS_CFG_SITE_MB, 0))
++		printf("Unable to reboot\n");
++}
++
++void lowlevel_init(void)
++{
++}
++
++ulong get_board_rev(void){
++	return readl((u32 *)SYS_ID);
++}
++
++#ifdef CONFIG_ARMV7_NONSEC
++/* Setting the address at which secondary cores start from.
++ * Versatile Express uses one address for all cores, so ignore corenr
++ */
++void smp_set_core_boot_addr(unsigned long addr, int corenr)
++{
++	/* The SYSFLAGS register on VExpress needs to be cleared first
++	 * by writing to the next address, since any writes to the address
++	 * at offset 0 will only be ORed in
++	 */
++	writel(~0, CONFIG_SYSFLAGS_ADDR + 4);
++	writel(addr, CONFIG_SYSFLAGS_ADDR);
++}
++#endif
+Binary files u-boot-2019.01a/board/armltd/vexpress_pds03/vexpress_common.o and u-boot-2019.01b/board/armltd/vexpress_pds03/vexpress_common.o differ
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/.vexpress_common.o.cmd u-boot-2019.01b/board/armltd/vexpress_pds03/.vexpress_common.o.cmd
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/.vexpress_common.o.cmd	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/.vexpress_common.o.cmd	2020-09-18 02:36:39.214823000 -0700
+@@ -0,0 +1,405 @@
++cmd_board/armltd/vexpress/vexpress_common.o := arm-linux-gnueabihf-gcc -Wp,-MD,board/armltd/vexpress/.vexpress_common.o.d  -nostdinc -isystem /home/aleksandarv/gcc-arm-8.2-2019.01-x86_64-arm-linux-gnueabihf/bin/../lib/gcc/arm-linux-gnueabihf/8.2.1/include -Iinclude   -I./arch/arm/include -include ./include/linux/kconfig.h -D__KERNEL__ -D__UBOOT__ -Wall -Wstrict-prototypes -Wno-format-security -fno-builtin -ffreestanding -std=gnu11 -fshort-wchar -fno-strict-aliasing -fno-PIE -Os -fno-stack-protector -fno-delete-null-pointer-checks -fmacro-prefix-map=./= -g -fstack-usage -Wno-format-nonliteral -Werror=date-time -D__ARM__ -marm -mno-thumb-interwork -mabi=aapcs-linux -mword-relocations -fno-pic -mno-unaligned-access -ffunction-sections -fdata-sections -fno-common -ffixed-r9 -msoft-float -pipe -march=armv7-a -D__LINUX_ARM_ARCH__=7 -mtune=generic-armv7-a    -D"KBUILD_STR(s)=$(pound)s" -D"KBUILD_BASENAME=KBUILD_STR(vexpress_common)"  -D"KBUILD_MODNAME=KBUILD_STR(vexpress_common)" -c -o board/armltd/vexpress/vexpress_common.o board/armltd/vexpress/vexpress_common.c
++
++source_board/armltd/vexpress/vexpress_common.o := board/armltd/vexpress/vexpress_common.c
++
++deps_board/armltd/vexpress/vexpress_common.o := \
++    $(wildcard include/config/show/boot/progress.h) \
++    $(wildcard include/config/smc911x.h) \
++    $(wildcard include/config/smc911x/base.h) \
++    $(wildcard include/config/arm/pl180/mmci.h) \
++    $(wildcard include/config/arm/pl180/mmci/base.h) \
++    $(wildcard include/config/arm/pl180/mmci/clock/freq.h) \
++    $(wildcard include/config/sys/sdram/base.h) \
++    $(wildcard include/config/armv7/nonsec.h) \
++    $(wildcard include/config/sysflags/addr.h) \
++  include/common.h \
++    $(wildcard include/config/sys/support/64bit/data.h) \
++    $(wildcard include/config/env/is/embedded.h) \
++    $(wildcard include/config/sys/malloc/len.h) \
++    $(wildcard include/config/env/addr.h) \
++    $(wildcard include/config/env/size.h) \
++    $(wildcard include/config/sys/monitor/base.h) \
++    $(wildcard include/config/sys/monitor/len.h) \
++    $(wildcard include/config/env/is/in/nvram.h) \
++    $(wildcard include/config/auto/complete.h) \
++    $(wildcard include/config/cmd/eeprom.h) \
++    $(wildcard include/config/env/eeprom/is/on/i2c.h) \
++    $(wildcard include/config/sys/i2c/eeprom/addr.h) \
++    $(wildcard include/config/sys/def/eeprom/addr.h) \
++    $(wildcard include/config/sys/dram/test.h) \
++    $(wildcard include/config/arm.h) \
++    $(wildcard include/config/led/status.h) \
++    $(wildcard include/config/show/activity.h) \
++    $(wildcard include/config/mp.h) \
++    $(wildcard include/config/post.h) \
++    $(wildcard include/config/has/post.h) \
++    $(wildcard include/config/post/alt/list.h) \
++    $(wildcard include/config/post/std/list.h) \
++    $(wildcard include/config/efi/stub.h) \
++  include/config.h \
++    $(wildcard include/config/boarddir.h) \
++  include/config_defaults.h \
++    $(wildcard include/config/defaults/h/.h) \
++    $(wildcard include/config/bootm/linux.h) \
++    $(wildcard include/config/bootm/netbsd.h) \
++    $(wildcard include/config/bootm/plan9.h) \
++    $(wildcard include/config/bootm/rtems.h) \
++    $(wildcard include/config/bootm/vxworks.h) \
++    $(wildcard include/config/gzip.h) \
++    $(wildcard include/config/zlib.h) \
++  include/config_uncmd_spl.h \
++    $(wildcard include/config/uncmd/spl/h//.h) \
++    $(wildcard include/config/spl/build.h) \
++    $(wildcard include/config/spl/dm.h) \
++    $(wildcard include/config/dm/serial.h) \
++    $(wildcard include/config/dm/gpio.h) \
++    $(wildcard include/config/dm/i2c.h) \
++    $(wildcard include/config/dm/spi.h) \
++    $(wildcard include/config/dm/warn.h) \
++    $(wildcard include/config/dm/stdio.h) \
++  include/configs/vexpress_ca9x4.h \
++    $(wildcard include/config/vexpress/original/memory/map.h) \
++  include/configs/vexpress_common.h \
++    $(wildcard include/config/vexpress/extended/memory/map.h) \
++    $(wildcard include/config/revision/tag.h) \
++    $(wildcard include/config/sys/memtest/start.h) \
++    $(wildcard include/config/sys/memtest/end.h) \
++    $(wildcard include/config/cmdline/tag.h) \
++    $(wildcard include/config/setup/memory/tags.h) \
++    $(wildcard include/config/sys/l2cache/off.h) \
++    $(wildcard include/config/initrd/tag.h) \
++    $(wildcard include/config/sys/timer/rate.h) \
++    $(wildcard include/config/sys/timer/counter.h) \
++    $(wildcard include/config/sys/timer/counts/down.h) \
++    $(wildcard include/config/pl011/clock.h) \
++    $(wildcard include/config/pl01x/ports.h) \
++    $(wildcard include/config/sys/serial0.h) \
++    $(wildcard include/config/sys/serial1.h) \
++    $(wildcard include/config/sys/baudrate/table.h) \
++    $(wildcard include/config/sys/mmc/max/blk/count.h) \
++    $(wildcard include/config/bootp/bootfilesize.h) \
++    $(wildcard include/config/sys/load/addr.h) \
++    $(wildcard include/config/sys/init/ram/size.h) \
++    $(wildcard include/config/sys/gbl/data/offset.h) \
++    $(wildcard include/config/sys/init/sp/addr.h) \
++    $(wildcard include/config/platform/env/settings.h) \
++    $(wildcard include/config/extra/env/settings.h) \
++    $(wildcard include/config/sys/flash/size.h) \
++    $(wildcard include/config/sys/max/flash/banks.h) \
++    $(wildcard include/config/sys/flash/base0.h) \
++    $(wildcard include/config/sys/flash/base1.h) \
++    $(wildcard include/config/sys/flash/erase/tout.h) \
++    $(wildcard include/config/sys/hz.h) \
++    $(wildcard include/config/sys/flash/write/tout.h) \
++    $(wildcard include/config/sys/max/flash/sect.h) \
++    $(wildcard include/config/env/sect/size.h) \
++    $(wildcard include/config/env/overwrite.h) \
++    $(wildcard include/config/env/offset.h) \
++    $(wildcard include/config/sys/flash/empty/info.h) \
++    $(wildcard include/config/sys/flash/banks/list.h) \
++    $(wildcard include/config/sys/cbsize.h) \
++  include/config_distro_bootcmd.h \
++    $(wildcard include/config/cmd/distro/bootcmd/h.h) \
++    $(wildcard include/config/cmd/mmc.h) \
++    $(wildcard include/config/sandbox.h) \
++    $(wildcard include/config/cmd/ubifs.h) \
++    $(wildcard include/config/efi/loader.h) \
++    $(wildcard include/config/arm64.h) \
++    $(wildcard include/config/x86/run/32bit.h) \
++    $(wildcard include/config/x86/run/64bit.h) \
++    $(wildcard include/config/arch/rv32i.h) \
++    $(wildcard include/config/arch/rv64i.h) \
++    $(wildcard include/config/sata.h) \
++    $(wildcard include/config/scsi.h) \
++    $(wildcard include/config/ide.h) \
++    $(wildcard include/config/dm/pci.h) \
++    $(wildcard include/config/cmd/usb.h) \
++    $(wildcard include/config/cmd/virtio.h) \
++    $(wildcard include/config/cmd/dhcp.h) \
++    $(wildcard include/config/x86.h) \
++    $(wildcard include/config/cmd/pxe.h) \
++    $(wildcard include/config/cmd/dhcp/or/pxe.h) \
++    $(wildcard include/config/bootcommand.h) \
++  arch/arm/include/asm/config.h \
++    $(wildcard include/config/h/.h) \
++    $(wildcard include/config/lmb.h) \
++    $(wildcard include/config/sys/boot/ramdisk/high.h) \
++    $(wildcard include/config/arch/ls1021a.h) \
++    $(wildcard include/config/cpu/pxa27x.h) \
++    $(wildcard include/config/cpu/monahans.h) \
++    $(wildcard include/config/cpu/pxa25x.h) \
++    $(wildcard include/config/fsl/layerscape.h) \
++  include/config_fallbacks.h \
++    $(wildcard include/config/fallbacks/h.h) \
++    $(wildcard include/config/spl.h) \
++    $(wildcard include/config/spl/pad/to.h) \
++    $(wildcard include/config/spl/max/size.h) \
++    $(wildcard include/config/cmd/kgdb.h) \
++    $(wildcard include/config/sys/pbsize.h) \
++    $(wildcard include/config/sys/prompt.h) \
++    $(wildcard include/config/sys/maxargs.h) \
++    $(wildcard include/config/sys/i2c.h) \
++  include/errno.h \
++    $(wildcard include/config/errno/str.h) \
++  include/linux/errno.h \
++  include/time.h \
++  include/linux/typecheck.h \
++  include/asm-offsets.h \
++  include/generated/generic-asm-offsets.h \
++  include/linux/bitops.h \
++  arch/arm/include/asm/types.h \
++    $(wildcard include/config/phys/64bit.h) \
++    $(wildcard include/config/dma/addr/t/64bit.h) \
++  include/asm-generic/int-ll64.h \
++  include/asm-generic/bitsperlong.h \
++  include/linux/compiler.h \
++    $(wildcard include/config/sparse/rcu/pointer.h) \
++    $(wildcard include/config/trace/branch/profiling.h) \
++    $(wildcard include/config/profile/all/branches.h) \
++    $(wildcard include/config/kasan.h) \
++    $(wildcard include/config/enable/must/check.h) \
++    $(wildcard include/config/enable/warn/deprecated.h) \
++    $(wildcard include/config/kprobes.h) \
++  include/linux/compiler-gcc.h \
++    $(wildcard include/config/arch/supports/optimized/inlining.h) \
++    $(wildcard include/config/optimize/inlining.h) \
++    $(wildcard include/config/gcov/kernel.h) \
++    $(wildcard include/config/arch/use/builtin/bswap.h) \
++  include/linux/types.h \
++    $(wildcard include/config/uid16.h) \
++  include/linux/posix_types.h \
++  include/linux/stddef.h \
++  arch/arm/include/asm/posix_types.h \
++  /home/aleksandarv/gcc-arm-8.2-2019.01-x86_64-arm-linux-gnueabihf/lib/gcc/arm-linux-gnueabihf/8.2.1/include/stdbool.h \
++  arch/arm/include/asm/bitops.h \
++  include/asm-generic/bitops/__ffs.h \
++  arch/arm/include/asm/proc-armv/system.h \
++    $(wildcard include/config/cpu/sa1100.h) \
++    $(wildcard include/config/cpu/sa110.h) \
++  include/asm-generic/bitops/__fls.h \
++  include/asm-generic/bitops/fls.h \
++  include/asm-generic/bitops/fls64.h \
++  include/linux/bug.h \
++  include/vsprintf.h \
++    $(wildcard include/config/panic/hang.h) \
++  /home/aleksandarv/gcc-arm-8.2-2019.01-x86_64-arm-linux-gnueabihf/lib/gcc/arm-linux-gnueabihf/8.2.1/include/stdarg.h \
++  include/linux/build_bug.h \
++  include/linux/printk.h \
++    $(wildcard include/config/loglevel.h) \
++  include/stdio.h \
++    $(wildcard include/config/tpl/build.h) \
++    $(wildcard include/config/tpl/serial/support.h) \
++    $(wildcard include/config/spl/serial/support.h) \
++  include/linux/delay.h \
++  include/linux/kernel.h \
++  include/linux/string.h \
++  arch/arm/include/asm/string.h \
++    $(wildcard include/config/use/arch/memcpy.h) \
++    $(wildcard include/config/use/arch/memset.h) \
++  include/linux/linux_string.h \
++  include/linux/stringify.h \
++  arch/arm/include/asm/ptrace.h \
++  arch/arm/include/asm/proc-armv/ptrace.h \
++    $(wildcard include/config/arm/thumb.h) \
++  include/part.h \
++    $(wildcard include/config/partition/uuids.h) \
++    $(wildcard include/config/partition/type/guid.h) \
++    $(wildcard include/config/dos/partition.h) \
++    $(wildcard include/config/partitions.h) \
++    $(wildcard include/config/spl/ext/support.h) \
++    $(wildcard include/config/spl/fat/support.h) \
++    $(wildcard include/config/sys/mmcsd/raw/mode/u/boot/partition.h) \
++    $(wildcard include/config/efi/partition.h) \
++  include/blk.h \
++    $(wildcard include/config/sys/64bit/lba.h) \
++    $(wildcard include/config/blk.h) \
++    $(wildcard include/config/lba48.h) \
++    $(wildcard include/config/block/cache.h) \
++  include/efi.h \
++    $(wildcard include/config/efi/stub/64bit.h) \
++    $(wildcard include/config/x86/64.h) \
++  include/linux/linkage.h \
++  arch/arm/include/asm/linkage.h \
++  include/ide.h \
++    $(wildcard include/config/sys/ide/maxdevice.h) \
++    $(wildcard include/config/sys/ide/maxbus.h) \
++    $(wildcard include/config/sys/ata/base/addr.h) \
++    $(wildcard include/config/ide/preinit.h) \
++    $(wildcard include/config/of/ide/fixup.h) \
++    $(wildcard include/config/ide/ahb.h) \
++  include/uuid.h \
++  include/linux/list.h \
++  include/linux/poison.h \
++  include/part_efi.h \
++    $(wildcard include/config/efi/partition/entries/numbers.h) \
++  include/flash.h \
++    $(wildcard include/config/sys/flash/cfi.h) \
++    $(wildcard include/config/mtd.h) \
++    $(wildcard include/config/cfi/flash.h) \
++    $(wildcard include/config/flash/cfi/mtd.h) \
++    $(wildcard include/config/sys/flash/protection.h) \
++    $(wildcard include/config/flash/cfi/legacy.h) \
++  include/image.h \
++    $(wildcard include/config/fit/verbose.h) \
++    $(wildcard include/config/fit/enable/rsassa/pss/support.h) \
++    $(wildcard include/config/fit/enable/sha256/support.h) \
++    $(wildcard include/config/sha1.h) \
++    $(wildcard include/config/sha256.h) \
++    $(wildcard include/config/fit.h) \
++    $(wildcard include/config/of/libfdt.h) \
++    $(wildcard include/config/spl/crc32/support.h) \
++    $(wildcard include/config/spl/md5/support.h) \
++    $(wildcard include/config/spl/sha1/support.h) \
++    $(wildcard include/config/crc32.h) \
++    $(wildcard include/config/spl/sha256/support.h) \
++    $(wildcard include/config/sys/boot/get/cmdline.h) \
++    $(wildcard include/config/of/board/setup.h) \
++    $(wildcard include/config/of/system/setup.h) \
++    $(wildcard include/config/timestamp.h) \
++    $(wildcard include/config/cmd/date.h) \
++    $(wildcard include/config/image/format/legacy.h) \
++    $(wildcard include/config/sys/boot/get/kbd.h) \
++    $(wildcard include/config/fit/signature.h) \
++    $(wildcard include/config/fit/best/match.h) \
++    $(wildcard include/config/android/boot/image.h) \
++    $(wildcard include/config/spl/fit/image/post/process.h) \
++    $(wildcard include/config/fit/image/post/process.h) \
++  include/compiler.h \
++  /home/aleksandarv/gcc-arm-8.2-2019.01-x86_64-arm-linux-gnueabihf/lib/gcc/arm-linux-gnueabihf/8.2.1/include/stddef.h \
++  arch/arm/include/asm/byteorder.h \
++  include/linux/byteorder/little_endian.h \
++  include/linux/byteorder/swab.h \
++  include/linux/byteorder/generic.h \
++  include/lmb.h \
++  arch/arm/include/asm/u-boot.h \
++  include/asm-generic/u-boot.h \
++    $(wildcard include/config/mpc8xx.h) \
++    $(wildcard include/config/e500.h) \
++    $(wildcard include/config/mpc86xx.h) \
++    $(wildcard include/config/m68k.h) \
++    $(wildcard include/config/mpc83xx.h) \
++    $(wildcard include/config/cpm2.h) \
++    $(wildcard include/config/extra/clock.h) \
++    $(wildcard include/config/has/eth1.h) \
++    $(wildcard include/config/has/eth2.h) \
++    $(wildcard include/config/has/eth3.h) \
++    $(wildcard include/config/has/eth4.h) \
++    $(wildcard include/config/has/eth5.h) \
++    $(wildcard include/config/nr/dram/banks.h) \
++  arch/arm/include/asm/u-boot-arm.h \
++  include/command.h \
++    $(wildcard include/config/sys/help/cmd/width.h) \
++    $(wildcard include/config/sys/longhelp.h) \
++    $(wildcard include/config/cmd/run.h) \
++    $(wildcard include/config/cmd/memory.h) \
++    $(wildcard include/config/cmd/i2c.h) \
++    $(wildcard include/config/cmd/itest.h) \
++    $(wildcard include/config/cmd/pci.h) \
++    $(wildcard include/config/cmd/bootd.h) \
++    $(wildcard include/config/cmd/bootm.h) \
++    $(wildcard include/config/cmdline.h) \
++  include/linker_lists.h \
++  include/log.h \
++    $(wildcard include/config/log.h) \
++    $(wildcard include/config/log/max/level.h) \
++    $(wildcard include/config/log/error/return.h) \
++  include/dm/uclass-id.h \
++  arch/arm/include/asm/global_data.h \
++    $(wildcard include/config/fsl/esdhc.h) \
++    $(wildcard include/config/u/qe.h) \
++    $(wildcard include/config/at91family.h) \
++    $(wildcard include/config/sys/icache/off.h) \
++    $(wildcard include/config/sys/dcache/off.h) \
++    $(wildcard include/config/sys/mem/reserve/secure.h) \
++    $(wildcard include/config/resv/ram.h) \
++    $(wildcard include/config/arch/omap2plus.h) \
++    $(wildcard include/config/fsl/lsch3.h) \
++    $(wildcard include/config/sys/fsl/has/dp/ddr.h) \
++    $(wildcard include/config/arch/imx8.h) \
++  include/asm-generic/global_data.h \
++    $(wildcard include/config/pci.h) \
++    $(wildcard include/config/lcd.h) \
++    $(wildcard include/config/video.h) \
++    $(wildcard include/config/board/types.h) \
++    $(wildcard include/config/pre/console/buffer.h) \
++    $(wildcard include/config/dm.h) \
++    $(wildcard include/config/timer.h) \
++    $(wildcard include/config/of/live.h) \
++    $(wildcard include/config/multi/dtb/fit.h) \
++    $(wildcard include/config/trace.h) \
++    $(wildcard include/config/sys/i2c/mxc.h) \
++    $(wildcard include/config/sys/malloc/f/len.h) \
++    $(wildcard include/config/pci/bootdelay.h) \
++    $(wildcard include/config/console/record.h) \
++    $(wildcard include/config/dm/video.h) \
++    $(wildcard include/config/bootstage.h) \
++    $(wildcard include/config/bloblist.h) \
++  include/membuff.h \
++  include/init.h \
++    $(wildcard include/config/cpu.h) \
++    $(wildcard include/config/dtb/reselect.h) \
++    $(wildcard include/config/vid.h) \
++  include/display_options.h \
++  include/u-boot/crc.h \
++  include/net.h \
++    $(wildcard include/config/sys/rx/eth/buffer.h) \
++    $(wildcard include/config/dm/eth.h) \
++    $(wildcard include/config/mcast/tftp.h) \
++    $(wildcard include/config/api.h) \
++    $(wildcard include/config/bootp/dns2.h) \
++    $(wildcard include/config/cmd/dns.h) \
++    $(wildcard include/config/cmd/ping.h) \
++    $(wildcard include/config/cmd/cdp.h) \
++    $(wildcard include/config/cmd/sntp.h) \
++    $(wildcard include/config/netconsole.h) \
++  arch/arm/include/asm/cache.h \
++    $(wildcard include/config/sys/thumb/build.h) \
++    $(wildcard include/config/sys/cacheline/size.h) \
++  arch/arm/include/asm/system.h \
++    $(wildcard include/config/armv8/psci.h) \
++    $(wildcard include/config/armv7/lpae.h) \
++    $(wildcard include/config/cpu/v7a.h) \
++    $(wildcard include/config/sys/noncached/memory.h) \
++  arch/arm/include/asm/barriers.h \
++  include/linux/if_ether.h \
++  include/bootstage.h \
++  include/malloc.h \
++    $(wildcard include/config/sys/malloc/simple.h) \
++  include/netdev.h \
++    $(wildcard include/config/eepro100.h) \
++    $(wildcard include/config/tulip.h) \
++    $(wildcard include/config/e1000.h) \
++    $(wildcard include/config/pcnet.h) \
++    $(wildcard include/config/natsemi.h) \
++    $(wildcard include/config/ns8382x.h) \
++    $(wildcard include/config/rtl8139.h) \
++    $(wildcard include/config/rtl8169.h) \
++    $(wildcard include/config/uli526x.h) \
++    $(wildcard include/config/phylib.h) \
++  arch/arm/include/asm/io.h \
++  arch/arm/include/asm/memory.h \
++    $(wildcard include/config/discontigmem.h) \
++  include/asm-generic/io.h \
++  include/iotrace.h \
++    $(wildcard include/config/io/trace.h) \
++  arch/arm/include/asm/mach-types.h \
++  arch/arm/include/asm/arch/systimer.h \
++  arch/arm/include/asm/arch/sysctrl.h \
++  arch/arm/include/asm/arch/wdt.h \
++  include/../drivers/mmc/arm_pl180_mmci.h \
++    $(wildcard include/config/dm/mmc.h) \
++  include/mmc.h \
++    $(wildcard include/config/mmc/hs200/support.h) \
++    $(wildcard include/config/mmc/uhs/support.h) \
++    $(wildcard include/config/mmc/hs400/support.h) \
++    $(wildcard include/config/mmc/write.h) \
++    $(wildcard include/config/mmc/hw/partitioning.h) \
++    $(wildcard include/config/dm/regulator.h) \
++    $(wildcard include/config/cmd/bkops/enable.h) \
++    $(wildcard include/config/mmc/spi.h) \
++  include/linux/sizes.h \
++  include/linux/const.h \
++
++board/armltd/vexpress/vexpress_common.o: $(deps_board/armltd/vexpress/vexpress_common.o)
++
++$(deps_board/armltd/vexpress/vexpress_common.o):
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/vexpress_common.su u-boot-2019.01b/board/armltd/vexpress_pds03/vexpress_common.su
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/vexpress_common.su	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/vexpress_common.su	2020-09-18 02:36:39.198823000 -0700
+@@ -0,0 +1,9 @@
++vexpress_common.c:50:5:board_init	8	static
++vexpress_common.c:63:5:board_eth_init	0	static
++vexpress_common.c:72:5:cpu_mmc_init	16	static
++vexpress_common.c:106:5:dram_init	8	static
++vexpress_common.c:113:5:dram_init_banksize	8	static
++vexpress_common.c:152:5:v2m_cfg_write	0	static
++vexpress_common.c:173:6:reset_cpu	8	static
++vexpress_common.c:179:6:lowlevel_init	0	static
++vexpress_common.c:183:7:get_board_rev	0	static
+diff -ruN u-boot-2019.01a/board/armltd/vexpress_pds03/vexpress_tc2.c u-boot-2019.01b/board/armltd/vexpress_pds03/vexpress_tc2.c
+--- u-boot-2019.01a/board/armltd/vexpress_pds03/vexpress_tc2.c	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/board/armltd/vexpress_pds03/vexpress_tc2.c	2019-01-14 14:02:36.000000000 -0800
+@@ -0,0 +1,84 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * (C) Copyright 2016 Linaro
++ * Jon Medhurst <tixy@linaro.org>
++ *
++ * TC2 specific code for Versatile Express.
++ */
++
++#include <asm/armv7.h>
++#include <asm/io.h>
++#include <asm/u-boot.h>
++#include <common.h>
++#include <linux/libfdt.h>
++
++#define SCC_BASE	0x7fff0000
++
++bool armv7_boot_nonsec_default(void)
++{
++#ifdef CONFIG_ARMV7_BOOT_SEC_DEFAULT
++	return false;
++#else
++	/*
++	 * The Serial Configuration Controller (SCC) register at address 0x700
++	 * contains flags for configuring the behaviour of the Boot Monitor
++	 * (which CPUs execute from reset). Two of these bits are of interest:
++	 *
++	 * bit 12 = Use per-cpu mailboxes for power management
++	 * bit 13 = Power down the non-boot cluster
++	 *
++	 * It is only when both of these are false that U-Boot's current
++	 * implementation of 'nonsec' mode can work as expected because we
++	 * rely on getting all CPUs to execute _nonsec_init, so let's check that.
++	 */
++	return (readl((u32 *)(SCC_BASE + 0x700)) & ((1 << 12) | (1 << 13))) == 0;
++#endif
++}
++
++#ifdef CONFIG_OF_BOARD_SETUP
++int ft_board_setup(void *fdt, bd_t *bd)
++{
++	int offset, tmp, len;
++	const struct fdt_property *prop;
++	const char *cci_compatible = "arm,cci-400-ctrl-if";
++
++#ifdef CONFIG_ARMV7_NONSEC
++	if (!armv7_boot_nonsec())
++		return 0;
++#else
++	return 0;
++#endif
++	/* Booting in nonsec mode, disable CCI access */
++	offset = fdt_path_offset(fdt, "/cpus");
++	if (offset < 0) {
++		printf("couldn't find /cpus\n");
++		return offset;
++	}
++
++	/* delete cci-control-port in each cpu node */
++	for (tmp = fdt_first_subnode(fdt, offset); tmp >= 0;
++	     tmp = fdt_next_subnode(fdt, tmp))
++		fdt_delprop(fdt, tmp, "cci-control-port");
++
++	/* disable all ace cci slave ports */
++	offset = fdt_node_offset_by_prop_value(fdt, offset, "compatible",
++					       cci_compatible, 20);
++	while (offset > 0) {
++		prop = fdt_get_property(fdt, offset, "interface-type",
++					&len);
++		if (!prop)
++			continue;
++		if (len < 4)
++			continue;
++		if (strcmp(prop->data, "ace"))
++			continue;
++
++		fdt_setprop_string(fdt, offset, "status", "disabled");
++
++		offset = fdt_node_offset_by_prop_value(fdt, offset, "compatible",
++						       cci_compatible, 20);
++	}
++
++	return 0;
++}
++#endif /* CONFIG_OF_BOARD_SETUP */
+diff -ruN u-boot-2019.01a/configs/vexpress_pds03_defconfig u-boot-2019.01b/configs/vexpress_pds03_defconfig
+--- u-boot-2019.01a/configs/vexpress_pds03_defconfig	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/configs/vexpress_pds03_defconfig	2020-09-18 04:02:12.272541000 -0700
+@@ -0,0 +1,34 @@
++CONFIG_ARM=y
++CONFIG_TARGET_VEXPRESS_PDS03=y
++CONFIG_SYS_TEXT_BASE=0x80800000
++CONFIG_BOOTDELAY=10
++CONFIG_DISTRO_DEFAULTS=y
++CONFIG_NR_DRAM_BANKS=2
++CONFIG_BOOTCOMMAND="run distro_bootcmd; run bootflash"
++# CONFIG_DISPLAY_CPUINFO is not set
++# CONFIG_DISPLAY_BOARDINFO is not set
++# CONFIG_CMD_CONSOLE is not set
++# CONFIG_CMD_BOOTD is not set
++# CONFIG_CMD_XIMG is not set
++# CONFIG_CMD_EDITENV is not set
++# CONFIG_CMD_LOADB is not set
++# CONFIG_CMD_LOADS is not set
++CONFIG_CMD_MMC=y
++# CONFIG_CMD_ITEST is not set
++# CONFIG_CMD_SETEXPR is not set
++# CONFIG_CMD_NFS is not set
++# CONFIG_CMD_MISC is not set
++CONFIG_CMD_UBI=y
++CONFIG_ENV_IS_IN_FLASH=y
++CONFIG_MTD_NOR_FLASH=y
++CONFIG_MTD_DEVICE=y
++CONFIG_FLASH_CFI_DRIVER=y
++CONFIG_SYS_FLASH_USE_BUFFER_WRITE=y
++CONFIG_SYS_FLASH_PROTECTION=y
++CONFIG_SYS_FLASH_CFI=y
++CONFIG_SMC911X=y
++CONFIG_SMC911X_BASE=0x4e000000
++CONFIG_SMC911X_32_BIT=y
++CONFIG_BAUDRATE=38400
++CONFIG_CONS_INDEX=0
++CONFIG_OF_LIBFDT=y
+diff -ruN u-boot-2019.01a/include/configs/vexpress_pds03.h u-boot-2019.01b/include/configs/vexpress_pds03.h
+--- u-boot-2019.01a/include/configs/vexpress_pds03.h	1969-12-31 16:00:00.000000000 -0800
++++ u-boot-2019.01b/include/configs/vexpress_pds03.h	2020-09-18 04:05:38.165435000 -0700
+@@ -0,0 +1,257 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++/*
++ * (C) Copyright 2011 Linaro
++ * Ryan Harkin, <ryan.harkin@linaro.org>
++ *
++ * Configuration for Versatile Express. Parts were derived from other ARM
++ *   configurations.
++ */
++
++#ifndef __VEXPRESS_PDS03_H
++#define __VEXPRESS_PDS03_H
++
++#define CONFIG_VEXPRESS_ORIGINAL_MEMORY_MAP
++
++
++/*
++ * Definitions copied from linux kernel:
++ * arch/arm/mach-vexpress/include/mach/motherboard.h
++ */
++#ifdef CONFIG_VEXPRESS_ORIGINAL_MEMORY_MAP
++/* CS register bases for the original memory map. */
++#define V2M_PA_CS0		0x40000000
++#define V2M_PA_CS1		0x44000000
++#define V2M_PA_CS2		0x48000000
++#define V2M_PA_CS3		0x4c000000
++#define V2M_PA_CS7		0x10000000
++
++#define V2M_PERIPH_OFFSET(x)	(x << 12)
++#define V2M_SYSREGS		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(0))
++#define V2M_SYSCTL		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(1))
++#define V2M_SERIAL_BUS_PCI	(V2M_PA_CS7 + V2M_PERIPH_OFFSET(2))
++
++#define V2M_BASE		0x80000000
++#elif defined(CONFIG_VEXPRESS_EXTENDED_MEMORY_MAP)
++/* CS register bases for the extended memory map. */
++#define V2M_PA_CS0		0x08000000
++#define V2M_PA_CS1		0x0c000000
++#define V2M_PA_CS2		0x14000000
++#define V2M_PA_CS3		0x18000000
++#define V2M_PA_CS7		0x1c000000
++
++#define V2M_PERIPH_OFFSET(x)	(x << 16)
++#define V2M_SYSREGS		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(1))
++#define V2M_SYSCTL		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(2))
++#define V2M_SERIAL_BUS_PCI	(V2M_PA_CS7 + V2M_PERIPH_OFFSET(3))
++
++#define V2M_BASE		0x80000000
++#endif
++
++/*
++ * Physical addresses, offset from V2M_PA_CS0-3
++ */
++#define V2M_NOR0		(V2M_PA_CS0)
++#define V2M_NOR1		(V2M_PA_CS1)
++#define V2M_SRAM		(V2M_PA_CS2)
++#define V2M_VIDEO_SRAM		(V2M_PA_CS3 + 0x00000000)
++#define V2M_ISP1761		(V2M_PA_CS3 + 0x03000000)
++
++/* Common peripherals relative to CS7. */
++#define V2M_AACI		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(4))
++#define V2M_MMCI		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(5))
++#define V2M_KMI0		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(6))
++#define V2M_KMI1		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(7))
++
++#define V2M_UART0		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(14))
++#define V2M_UART1		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(10))
++#define V2M_UART2		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(11))
++#define V2M_UART3		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(12))
++
++#define V2M_WDT			(V2M_PA_CS7 + V2M_PERIPH_OFFSET(15))
++
++#define V2M_TIMER01		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(21))
++#define V2M_TIMER23		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(18))
++
++#define V2M_SERIAL_BUS_DVI	(V2M_PA_CS7 + V2M_PERIPH_OFFSET(22))
++#define V2M_RTC			(V2M_PA_CS7 + V2M_PERIPH_OFFSET(23))
++
++#define V2M_CF			(V2M_PA_CS7 + V2M_PERIPH_OFFSET(26))
++
++#define V2M_CLCD		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(31))
++#define V2M_SIZE_CS7		V2M_PERIPH_OFFSET(32)
++
++#define PDS_VE_MM_SENSOR 	(V2M_PA_CS7 + V2M_PERIPH_OFFSET(24))
++#define PDS_VE_I2C  		(V2M_PA_CS7 + V2M_PERIPH_OFFSET(8))
++
++/* System register offsets. */
++#define V2M_SYS_CFGDATA		(V2M_SYSREGS + 0x0a0)
++#define V2M_SYS_CFGCTRL		(V2M_SYSREGS + 0x0a4)
++#define V2M_SYS_CFGSTAT		(V2M_SYSREGS + 0x0a8)
++
++/*
++ * Configuration
++ */
++#define SYS_CFG_START		(1 << 31)
++#define SYS_CFG_WRITE		(1 << 30)
++#define SYS_CFG_OSC		(1 << 20)
++#define SYS_CFG_VOLT		(2 << 20)
++#define SYS_CFG_AMP		(3 << 20)
++#define SYS_CFG_TEMP		(4 << 20)
++#define SYS_CFG_RESET		(5 << 20)
++#define SYS_CFG_SCC		(6 << 20)
++#define SYS_CFG_MUXFPGA		(7 << 20)
++#define SYS_CFG_SHUTDOWN	(8 << 20)
++#define SYS_CFG_REBOOT		(9 << 20)
++#define SYS_CFG_DVIMODE		(11 << 20)
++#define SYS_CFG_POWER		(12 << 20)
++#define SYS_CFG_SITE_MB		(0 << 16)
++#define SYS_CFG_SITE_DB1	(1 << 16)
++#define SYS_CFG_SITE_DB2	(2 << 16)
++#define SYS_CFG_STACK(n)	((n) << 12)
++
++#define SYS_CFG_ERR		(1 << 1)
++#define SYS_CFG_COMPLETE	(1 << 0)
++
++/* Board info register */
++#define SYS_ID				V2M_SYSREGS
++#define CONFIG_REVISION_TAG		1
++
++#define CONFIG_SYS_MEMTEST_START	V2M_BASE
++#define CONFIG_SYS_MEMTEST_END		0x20000000
++
++#define CONFIG_CMDLINE_TAG		1	/* enable passing of ATAGs */
++#define CONFIG_SETUP_MEMORY_TAGS	1
++#define CONFIG_SYS_L2CACHE_OFF		1
++#define CONFIG_INITRD_TAG		1
++
++/* Size of malloc() pool */
++#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 512 * 1024) /* >= 512 KiB */
++
++#define SCTL_BASE			V2M_SYSCTL
++#define VEXPRESS_FLASHPROG_FLVPPEN	(1 << 0)
++
++#define CONFIG_SYS_TIMER_RATE		1000000
++#define CONFIG_SYS_TIMER_COUNTER	(V2M_TIMER01 + 0x4)
++#define CONFIG_SYS_TIMER_COUNTS_DOWN
++
++/* PL011 Serial Configuration */
++#define CONFIG_PL011_CLOCK		24000000
++#define CONFIG_PL01x_PORTS		{(void *)CONFIG_SYS_SERIAL0, \
++					 (void *)CONFIG_SYS_SERIAL1}
++
++#define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
++#define CONFIG_SYS_SERIAL0		V2M_UART0
++#define CONFIG_SYS_SERIAL1		V2M_UART1
++
++#define CONFIG_ARM_PL180_MMCI
++#define CONFIG_ARM_PL180_MMCI_BASE	V2M_MMCI
++#define CONFIG_SYS_MMC_MAX_BLK_COUNT	127
++#define CONFIG_ARM_PL180_MMCI_CLOCK_FREQ 6250000
++
++/* BOOTP options */
++#define CONFIG_BOOTP_BOOTFILESIZE
++
++/* Miscellaneous configurable options */
++#define CONFIG_SYS_LOAD_ADDR		(V2M_BASE + 0x8000)
++#define LINUX_BOOT_PARAM_ADDR		(V2M_BASE + 0x2000)
++
++/* Physical Memory Map */
++#define PHYS_SDRAM_1			(V2M_BASE)	/* SDRAM Bank #1 */
++#define PHYS_SDRAM_2			(((unsigned int)V2M_BASE) + \
++					((unsigned int)0x20000000))
++#define PHYS_SDRAM_1_SIZE		0x20000000	/* 512 MB */
++#define PHYS_SDRAM_2_SIZE		0x20000000	/* 512 MB */
++
++/* additions for new relocation code */
++#define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
++#define CONFIG_SYS_INIT_RAM_SIZE		0x1000
++#define CONFIG_SYS_GBL_DATA_OFFSET	(CONFIG_SYS_SDRAM_BASE + \
++					 CONFIG_SYS_INIT_RAM_SIZE - \
++					 GENERATED_GBL_DATA_SIZE)
++#define CONFIG_SYS_INIT_SP_ADDR		CONFIG_SYS_GBL_DATA_OFFSET
++
++/* Basic environment settings */
++#define BOOT_TARGET_DEVICES(func) \
++        func(MMC, mmc, 1) \
++        func(MMC, mmc, 0) \
++        func(PXE, pxe, na) \
++        func(DHCP, dhcp, na)
++#include <config_distro_bootcmd.h>
++
++#ifdef CONFIG_VEXPRESS_ORIGINAL_MEMORY_MAP
++#define CONFIG_PLATFORM_ENV_SETTINGS \
++		"loadaddr=0x80008000\0" \
++		"ramdisk_addr_r=0x61000000\0" \
++		"kernel_addr=0x44100000\0" \
++		"ramdisk_addr=0x44800000\0" \
++		"maxramdisk=0x1800000\0" \
++		"pxefile_addr_r=0x88000000\0" \
++		"scriptaddr=0x88000000\0" \
++		"kernel_addr_r=0x80008000\0"
++#elif defined(CONFIG_VEXPRESS_EXTENDED_MEMORY_MAP)
++#define CONFIG_PLATFORM_ENV_SETTINGS \
++		"loadaddr=0xa0008000\0" \
++		"ramdisk_addr_r=0x81000000\0" \
++		"kernel_addr=0x0c100000\0" \
++		"ramdisk_addr=0x0c800000\0" \
++		"maxramdisk=0x1800000\0" \
++		"pxefile_addr_r=0xa8000000\0" \
++		"scriptaddr=0xa8000000\0" \
++		"kernel_addr_r=0xa0008000\0"
++#endif
++#define CONFIG_EXTRA_ENV_SETTINGS \
++		CONFIG_PLATFORM_ENV_SETTINGS \
++                BOOTENV \
++		"console=ttyAMA0,38400n8\0" \
++		"dram=1024M\0" \
++		"root=/dev/sda1 rw\0" \
++		"mtd=armflash:1M@0x800000(uboot),7M@0x1000000(kernel)," \
++			"24M@0x2000000(initrd)\0" \
++		"flashargs=setenv bootargs root=${root} console=${console} " \
++			"mem=${dram} mtdparts=${mtd} mmci.fmax=190000 " \
++			"devtmpfs.mount=0  vmalloc=256M\0" \
++		"bootflash=run flashargs; " \
++			"cp ${ramdisk_addr} ${ramdisk_addr_r} ${maxramdisk}; " \
++			"bootm ${kernel_addr} ${ramdisk_addr_r}\0"
++
++/* FLASH and environment organization */
++#define PHYS_FLASH_SIZE			0x04000000	/* 64MB */
++#define CONFIG_SYS_FLASH_SIZE		0x04000000
++#define CONFIG_SYS_MAX_FLASH_BANKS	2
++#define CONFIG_SYS_FLASH_BASE0		V2M_NOR0
++#define CONFIG_SYS_FLASH_BASE1		V2M_NOR1
++#define CONFIG_SYS_MONITOR_BASE		CONFIG_SYS_FLASH_BASE0
++
++/* Timeout values in ticks */
++#define CONFIG_SYS_FLASH_ERASE_TOUT	(2 * CONFIG_SYS_HZ) /* Erase Timeout */
++#define CONFIG_SYS_FLASH_WRITE_TOUT	(2 * CONFIG_SYS_HZ) /* Write Timeout */
++
++/* 255 0x40000 sectors + first or last sector may have 4 erase regions = 259 */
++#define CONFIG_SYS_MAX_FLASH_SECT	259		/* Max sectors */
++#define FLASH_MAX_SECTOR_SIZE		0x00040000	/* 256 KB sectors */
++
++/* Room required on the stack for the environment data */
++#define CONFIG_ENV_SIZE			FLASH_MAX_SECTOR_SIZE
++
++/*
++ * Amount of flash used for environment:
++ * We don't know which end has the small erase blocks so we use the penultimate
++ * sector location for the environment
++ */
++#define CONFIG_ENV_SECT_SIZE		FLASH_MAX_SECTOR_SIZE
++#define CONFIG_ENV_OVERWRITE		1
++
++/* Store environment at top of flash */
++#define CONFIG_ENV_OFFSET		(PHYS_FLASH_SIZE - \
++					(2 * CONFIG_ENV_SECT_SIZE))
++#define CONFIG_ENV_ADDR			(CONFIG_SYS_FLASH_BASE1 + \
++					 CONFIG_ENV_OFFSET)
++#define CONFIG_SYS_FLASH_EMPTY_INFO	/* flinfo indicates empty blocks */
++#define CONFIG_SYS_FLASH_BANKS_LIST	{ CONFIG_SYS_FLASH_BASE0, \
++					  CONFIG_SYS_FLASH_BASE1 }
++
++/* Monitor Command Prompt */
++#define CONFIG_SYS_CBSIZE		512	/* Console I/O Buffer Size */
++
++
++#endif /* VEXPRESS_PDS03_H */

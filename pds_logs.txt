@@ -25,17 +25,39 @@ Potrebno ući u ../bin/arm/
 
 i ponovo make-ovati qemu 
 
-ali prvo mora 
+ali prvo mora ili ne mora
 
 $ make clean
 
 $ ../../configure –target-list=arm-softmmu –enable-sdl –with-sdlabi=2.0 –enable-tools –enable-fdt –enable-libnfs –audio-drv-list=alsa
+
+../../configure –target-list=arm-softmmu –enable-sdl –with-sdlabi=2.0 –enable-tools –enable-fdt –enable-libnfs –audio-drv-list=alsa
+
+../../configure --target-list=arm-softmmu --enable-sdl --with-sdlabi=2.0 --enable-tools --enable-fdt --enable-libnfs --audio-drv-list=alsa
+
 
 Napomena: Nisam uspeo da ponovo pustim configure na već build-ovano
 
 i onda
 
 $ make 
+
+GEN     config-host.h
+GEN     trace/generated-tcg-tracers.h
+GEN     trace/generated-helpers-wrappers.h
+GEN     trace/generated-helpers.h
+GEN     trace/generated-helpers.c
+GEN     module_block.h
+CC      block.o
+LINK    qemu-nbd
+LINK    qemu-img
+LINK    qemu-io
+GEN     arm-softmmu/config-target.h
+CC      arm-softmmu/hw/misc/pds-mmsens.o
+CC      arm-softmmu/hw/misc/pds-i2csens.o
+CC      arm-softmmu/hw/arm/vexpress.o
+GEN     trace/generated-helpers.c
+LINK    arm-softmmu/qemu-system-arm
 
 
 Napomena:
@@ -281,8 +303,9 @@ Pravljenje u-boot commands:
 
 https://bootlin.com/blog/mkenvimage-uboot-binary-env-generator/
 
-mkimage -T u-boot-commands -C none -n 'setenv-name' -d u-boot.env u-boot.env.img
-
+mkimage -T script -C none -n 'u-boot-commands' -d u-boot.env u-boot.env.img
+mkimage -T script -C none  -d u-boot-commands u-boot-commands.img
+-n 'u-boot-commands'
 
 qemu-system-arm -M vexpress-pds03 -m 1G -kernel u-boot-2019.01/u-boot -nographic -drive file=sd.img,format=raw,if=sd -device loader,file=u-boot-commands.img,addr=0x100000,force-raw -net nic -net tap,ifname=tap0,script=no
 

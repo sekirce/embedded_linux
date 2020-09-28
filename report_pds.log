@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7300 NEXT 64-bit) (preloaded format=pdflatex 2020.2.2)  7 SEP 2020 16:45
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7300 NEXT 64-bit) (preloaded format=pdflatex 2020.2.2)  26 SEP 2020 07:12
 entering extended mode
-**D:/ext_electronics/faculty/oe5pds/izveštaj/report_pds.tex
-(D:/ext_electronics/faculty/oe5pds/izveštaj/report_pds.tex
+**C:/Users/aleksandarv/Documents/GitHub/embedded_linux/report_pds.tex
+(C:/Users/aleksandarv/Documents/GitHub/embedded_linux/report_pds.tex
 LaTeX2e <2018-12-01>
 
 ("C:\Users\aleksandarv\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\article
@@ -1762,100 +1762,160 @@ Underfull \hbox (badness 10000) in paragraph at lines 76--77
  []
 
 LaTeX Font Info:    Font shape `T1/XCharter-TLF/b/n' will be
-(Font)              scaled to size 10.0pt on input line 85.
+(Font)              scaled to size 10.0pt on input line 110.
 
-Underfull \hbox (badness 10000) in paragraph at lines 85--86
+Underfull \hbox (badness 10000) in paragraph at lines 110--111
 
  []
 
-LaTeX Font Info:    Try loading font information for T1+cmtt on input line 90.
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 115.
+
 
 ("C:\Users\aleksandarv\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\t1cmtt.
 fd"
 File: t1cmtt.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
-LaTeX Font Info:    Try loading font information for T1+cmss on input line 93.
+LaTeX Font Info:    Try loading font information for T1+cmss on input line 118.
+
 
 ("C:\Users\aleksandarv\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\t1cmss.
 fd"
 File: t1cmss.fd 2014/09/29 v2.5h Standard LaTeX font definitions
-) [1
+)
+Underfull \hbox (badness 10000) in paragraph at lines 120--121
+
+ []
+
+[1
 
 {C:/Users/aleksandarv/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
-Overfull \hbox (10.08824pt too wide) in paragraph at lines 132--133
+Underfull \hbox (badness 10000) in paragraph at lines 147--148
+
+ []
+
+
+Overfull \hbox (10.08824pt too wide) in paragraph at lines 182--183
 \T1/XCharter-TLF/m/n/10 svoj def-con-fig fajl unu-tar di-rek-to-ri-jum  \T1/XCh
 arter-TLF/m/it/10 /u-boot-*/configs/) \T1/XCharter-TLF/m/n/10 koji se do-bija k
 o-pi-ra-njem \T1/XCharter-TLF/m/it/10 ve-xpress_ca9x4_defconfig
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 156--157
-
+Overfull \hbox (3.98743pt too wide) in paragraph at lines 252--252
+[]\T1/cmtt/m/n/10 #define PDS_VE_MM_SENSOR  (V2M_PA_CS7 + V2M_PERIPH_OFFSET(24)
+)[] 
  []
 
 [2]
-Overfull \hbox (16.83434pt too wide) in paragraph at lines 226--227
-[]\T1/XCharter-TLF/m/n/10 Fajlovi \T1/XCharter-TLF/m/it/10 ./arch/arm/boot/dts/
-vexpress-v2m-ca9-pds03.dtsi \T1/XCharter-TLF/m/n/10 i \T1/XCharter-TLF/m/it/10 
-./arch/arm/boot/dts/vexpress-v2p-ca9-pds03.dts
+Underfull \hbox (badness 10000) in paragraph at lines 255--256
+
+ []
+
+
+Overfull \hbox (74.53214pt too wide) in paragraph at lines 257--258
+[]\T1/XCharter-TLF/m/n/10 Naredne li-nije kod su do-date u faj-love bo-ar-d/ar-
+mlt-d/ve-xpress_pds03/Kconfig i bo-ar-d/ar-mlt-d/ve-xpress_pds03/Makefile: 
  []
 
 [3]
-Underfull \hbox (badness 10000) in paragraph at lines 276--277
+Underfull \hbox (badness 10000) in paragraph at lines 324--325
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 337--338
 
  []
 
 LaTeX Font Info:    Font shape `T1/XCharter-TLF/b/it' will be
-(Font)              scaled to size 14.4pt on input line 279.
-[4]
-Underfull \hbox (badness 10000) in paragraph at lines 348--349
+(Font)              scaled to size 14.4pt on input line 365.
 
+Overfull \hbox (8.77434pt too wide) in paragraph at lines 367--368
+[]\T1/XCharter-TLF/m/n/10 Fajlovi \T1/XCharter-TLF/m/it/10 ./linux-*/arch/arm/b
+oot/dts/vexpress-v2m-ca9-pds03.dtsi \T1/XCharter-TLF/m/n/10 i \T1/XCharter-TLF/
+m/it/10 ./linux-*/arch/arm/boot/dts/vexpress-
  []
 
 
-Overfull \hbox (8.40463pt too wide) in paragraph at lines 371--371
-[]\T1/cmtt/m/n/10 CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnuea
-bihf --prefix=/usr[] 
+Underfull \hbox (badness 10000) in paragraph at lines 367--368
+
+ []
+
+[4]
+Underfull \hbox (badness 10000) in paragraph at lines 425--426
+
  []
 
 [5]
-Underfull \hbox (badness 10000) in paragraph at lines 397--398
+Underfull \hbox (badness 10000) in paragraph at lines 443--444
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 416--417
+Underfull \hbox (badness 10000) in paragraph at lines 445--446
 
  []
 
 [6]
-Underfull \hbox (badness 10000) in paragraph at lines 448--449
+Underfull \hbox (badness 10000) in paragraph at lines 515--517
 
  []
 
-[7] (report_pds.aux) ) 
+
+Underfull \hbox (badness 10000) in paragraph at lines 518--519
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 530--531
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 543--544
+
+ []
+
+
+Overfull \hbox (18.90207pt too wide) in paragraph at lines 566--566
+[]\T1/cmtt/m/n/10 $ CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnu
+eabihf --prefix=/usr[] 
+ []
+
+[7]
+Underfull \hbox (badness 10000) in paragraph at lines 592--593
+
+ []
+
+[8]
+Overfull \hbox (9.23615pt too wide) in paragraph at lines 655--655
+[]\T1/cmtt/m/n/10 sudo route add -net 192.168.10.0 netmask 255.255.255.0 dev ta
+p0[] 
+ []
+
+[9] [10] (report_pds.aux) ) 
 Here is how much of TeX's memory you used:
- 32684 strings out of 492891
- 643445 string characters out of 3120829
- 677608 words of memory out of 3000000
- 36099 multiletter control sequences out of 15000+200000
+ 32708 strings out of 492891
+ 644033 string characters out of 3120829
+ 678167 words of memory out of 3000000
+ 36123 multiletter control sequences out of 15000+200000
  598471 words of font info for 89 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 69i,10n,74p,952b,978s stack positions out of 5000i,500n,10000p,200000b,50000s
-{C:/Users/aleksandarv/AppData/Local/Programs/MiKTeX 2.9/f
-onts/enc/dvips/xcharter/xch_uy5hgr.enc} <C:\Users\aleksandarv\AppData\Local\MiK
-TeX\2.9\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk> <C:\Users\aleksandarv\A
-ppData\Local\MiKTeX\2.9\fonts/pk/ljfour/jknappen/ec/dpi600\ecss1000.pk>{C:/User
-s/aleksandarv/AppData/Local/Programs/MiKTeX 2.9/fonts/enc/dvips/xcharter/xch_q7
-u3cc.enc}<C:/Users/aleksandarv/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/pu
-blic/xcharter/XCharter-Bold.pfb><C:/Users/aleksandarv/AppData/Local/Programs/Mi
-KTeX 2.9/fonts/type1/public/xcharter/XCharter-BoldItalic.pfb><C:/Users/aleksand
-arv/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/xcharter/XCharter-Ital
-ic.pfb><C:/Users/aleksandarv/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/publ
-ic/xcharter/XCharter-Roman.pfb>
-Output written on report_pds.pdf (7 pages, 243870 bytes).
+ 69i,10n,74p,961b,978s stack positions out of 5000i,500n,10000p,200000b,50000s
+{C:/Users/aleksandarv/AppData/Local/Programs/MiKTeX 
+2.9/fonts/enc/dvips/xcharter/xch_uy5hgr.enc} <C:\Users\aleksandarv\AppData\Loca
+l\MiKTeX\2.9\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk> <C:\Users\aleksand
+arv\AppData\Local\MiKTeX\2.9\fonts/pk/ljfour/jknappen/ec/dpi600\ecss1000.pk>{C:
+/Users/aleksandarv/AppData/Local/Programs/MiKTeX 2.9/fonts/enc/dvips/xcharter/x
+ch_q7u3cc.enc}<C:/Users/aleksandarv/AppData/Local/Programs/MiKTeX 2.9/fonts/typ
+e1/public/xcharter/XCharter-Bold.pfb><C:/Users/aleksandarv/AppData/Local/Progra
+ms/MiKTeX 2.9/fonts/type1/public/xcharter/XCharter-BoldItalic.pfb><C:/Users/ale
+ksandarv/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/xcharter/XCharter
+-Italic.pfb><C:/Users/aleksandarv/AppData/Local/Programs/MiKTeX 2.9/fonts/type1
+/public/xcharter/XCharter-Roman.pfb>
+Output written on report_pds.pdf (10 pages, 251566 bytes).
 PDF statistics:
- 147 PDF objects out of 1000 (max. 8388607)
+ 157 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 
